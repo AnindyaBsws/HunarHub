@@ -1,15 +1,68 @@
 //Import Libraries
 import bcrypt from 'bcrypt';
+import jwt from 'jsonwebtoken';
 
 //Imports
 import prisma from '../config/prisma.js';
+import { verifyToken,generateAccessToken, generateRefreshToken } from '../utils/jwt.js';
 
-//.......Test User.........
+
+
+//-------------------Controller Functions----------------
+
+
+
+//-------Auth Controllers----------
+
+//.......Test User Controller Function.........
 function testUser(req,res){
     res.send('Hello, I am Anindya Biswas!!');
 }
 
-//........Register User...........
+//............RefreshToken Controller Function...........
+async function refreshTokenController(req, res) {
+    const authHeader = req.headers.authorization;
+
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+        return res.status(401).json({
+            message: 'No refresh token provided'
+        });
+    }
+
+    const refreshToken = authHeader.split(' ')[1];
+
+    try {
+        //Check DB first
+        const storedToken = await prisma.refreshToken.findUnique({
+            where: { token: refreshToken }
+        });
+
+        if (!storedToken) {
+            return res.status(403).json({
+                message: 'Token not valid (logged out)'
+            });
+        }
+
+        // Verify token
+        const decoded = verifyToken(refreshToken, process.env.REFRESH_SECRET);
+
+        // Generate new access token
+        const newAccessToken = generateAccessToken({ id: decoded.id });
+
+        res.json({
+            accessToken: newAccessToken
+        });
+
+    } catch(error) {
+        console.error(error);
+        res.status(403).json({
+            message: 'Invalid refresh token'
+        });
+    }
+}
+
+
+//........Register User Controller Function...........
 async function registerUser(req,res){
     //....Flow.....
     //1. req.body
@@ -29,9 +82,12 @@ async function registerUser(req,res){
     }
 
     try {
+        //Email trimming
+        const cleanEmail = email.trim().toLowerCase();
+
         //Existing Email Checker
         const existingUser = await prisma.user.findUnique({
-            where: { email }
+            where: { email: cleanEmail }
         });
         if(existingUser){
             return res.status(400).json({
@@ -39,7 +95,7 @@ async function registerUser(req,res){
             });
         }
 
-        //Password Hashing
+        //Password Hashing 
         const hashedPassword = await bcrypt.hash(password, 10);
 
 
@@ -47,7 +103,7 @@ async function registerUser(req,res){
         await prisma.user.create({
             data: {
                 name,
-                email,
+                email: cleanEmail,
                 password: hashedPassword
             }
         });
@@ -66,7 +122,7 @@ async function registerUser(req,res){
     }
 }
 
-
+//.........Login User Controller Function.........
 async function loginUser(req,res){
     // ...flow...
     // 1.Get (mail+pass)
@@ -107,9 +163,24 @@ async function loginUser(req,res){
             });
         }
 
+        //JWT TOKEN setup
+        const payload = { id: user.id, email: user.email };
+
+        const accessToken = generateAccessToken(payload);
+        const refreshToken = generateRefreshToken(payload);
+        //Save accessToken and refreshToken in DB
+        await prisma.refreshToken.create({
+            data: {
+                token: refreshToken,
+                userId: user.id
+            }
+        });
+
         //Success Message
         return res.status(200).json({
-            message: 'Login Successful.'
+            message: 'Login Successful.',
+            accessToken,
+            refreshToken
         });
 
     } catch (error) {
@@ -121,4 +192,59 @@ async function loginUser(req,res){
     }
 }
 
-export { testUser,registerUser,loginUser };
+
+//...............Logout User Function Controller...........
+async function logoutUser(req, res) {
+    const { refreshToken } = req.body;
+
+    // Validation
+    if (!refreshToken) {
+        return res.status(400).json({
+            message: 'Refresh token required'
+        });
+    }
+
+    try {
+        // Delete token from DB
+        const deleted = await prisma.refreshToken.deleteMany({
+            where: { token: refreshToken }
+        });
+
+        if (deleted.count === 0) {
+            return res.status(400).json({
+                message: 'Token not found or already logged out'
+            });
+        }
+
+        return res.status(200).json({
+            message: 'Logout successful'
+        });
+
+    } catch (error) {
+        console.error(error);
+        return res.status(500).json({
+            message: 'Logout failed'
+        });
+    }
+}
+
+
+
+
+//-----------User Controllers------------
+
+
+//.............Profile Controller Function..........
+// METHOD : GET
+async function getProfile(req,res){
+    const user = await prisma.user.findUnique({
+        where: { id: req.userId }
+    });
+
+    res.json({
+        message: 'Protected route accessed',
+        user
+    });
+}
+
+export { testUser,registerUser,loginUser,getProfile,refreshTokenController,logoutUser };
