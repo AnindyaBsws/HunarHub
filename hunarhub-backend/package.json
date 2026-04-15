@@ -4,14 +4,18 @@
   "main": "index.js",
   "type": "module",
   "scripts": {
-    "test": "node --experimental-vm-modules node_modules/jest/bin/jest.js",
-    "dev": "nodemon server.js"
+    "dev": "nodemon start.js",
+    "test": "node --experimental-vm-modules node_modules/jest/bin/jest.js --runInBand",
+    "test:db:reset": "dotenv -e .env.test -- prisma migrate reset --force",
+    "test:run": "dotenv -e .env.test -- node --experimental-vm-modules node_modules/jest/bin/jest.js --runInBand",
+    "test:full": "dotenv -e .env.test -- prisma migrate reset --force && dotenv -e .env.test -- node --experimental-vm-modules node_modules/jest/bin/jest.js --runInBand",
+    "test:studio": "dotenv -e .env.test -- prisma studio"
   },
 
   "jest": {
     "testEnvironment": "node"
   },
-  
+
   "keywords": [],
   "author": "",
   "license": "ISC",
