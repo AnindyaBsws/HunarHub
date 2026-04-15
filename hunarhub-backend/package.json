@@ -11,11 +11,9 @@
     "test:full": "dotenv -e .env.test -- prisma migrate reset --force && dotenv -e .env.test -- node --experimental-vm-modules node_modules/jest/bin/jest.js --runInBand",
     "test:studio": "dotenv -e .env.test -- prisma studio"
   },
-
   "jest": {
     "testEnvironment": "node"
   },
-
   "keywords": [],
   "author": "",
   "license": "ISC",
@@ -23,6 +21,7 @@
   "dependencies": {
     "@prisma/client": "^5.22.0",
     "bcrypt": "^6.0.0",
+    "cookie-parser": "^1.4.7",
     "cors": "^2.8.6",
     "dotenv": "^17.4.2",
     "dotenv-cli": "^11.0.0",

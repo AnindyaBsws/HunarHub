@@ -21,25 +21,45 @@ function testUser(req,res){
 
 //............RefreshToken Controller Function...........
 async function refreshTokenController(req, res) {
-    const authHeader = req.headers.authorization;
 
-    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+    // Get refresh token from cookies or header
+    let refreshToken;
+
+    // Try cookies
+    if (req.cookies && req.cookies.refreshToken) {
+        refreshToken = req.cookies.refreshToken;
+    }
+
+    // Fallback to Authorization header
+    else if (req.headers.authorization && req.headers.authorization.startsWith('Bearer ')) {
+        refreshToken = req.headers.authorization.split(' ')[1];
+    }
+
+    // If no token found
+    if (!refreshToken) {
         return res.status(401).json({
             message: 'No refresh token provided'
         });
     }
 
-    const refreshToken = authHeader.split(' ')[1];
-
     try {
-        //Check DB first
+        // Check DB first
         const storedToken = await prisma.refreshToken.findUnique({
             where: { token: refreshToken }
         });
 
+        // Token reuse detection
         if (!storedToken) {
+
+            const decoded = verifyToken(refreshToken, process.env.REFRESH_SECRET);
+
+            // Delete all tokens of this user (force logout everywhere)
+            await prisma.refreshToken.deleteMany({
+                where: { userId: decoded.id }
+            });
+
             return res.status(403).json({
-                message: 'Token not valid (logged out)'
+                message: 'Token reuse detected. All sessions revoked.'
             });
         }
 
@@ -49,13 +69,13 @@ async function refreshTokenController(req, res) {
         // Generate new access token
         const newAccessToken = generateAccessToken({ id: decoded.id });
 
-        res.json({
+        return res.json({
             accessToken: newAccessToken
         });
 
-    } catch(error) {
+    } catch (error) {
         console.error(error);
-        res.status(403).json({
+        return res.status(403).json({
             message: 'Invalid refresh token'
         });
     }
@@ -176,6 +196,18 @@ async function loginUser(req,res){
             }
         });
 
+        res
+        .cookie("accessToken", accessToken, {
+            httpOnly: true,
+            secure: false,    //(HTTPS)
+            sameSite: "Strict"
+        })
+        .cookie("refreshToken", refreshToken, {
+            httpOnly: true,
+            secure: false,
+            sameSite: "Strict"
+        });
+
         //Success Message
         return res.status(200).json({
             message: 'Login Successful.',
@@ -195,9 +227,19 @@ async function loginUser(req,res){
 
 //...............Logout User Function Controller...........
 async function logoutUser(req, res) {
-    const { refreshToken } = req.body;
+    let refreshToken;
 
-    // Validation
+    //Try body(for tests only)
+    if(req.body && req.body.refreshToken){
+        refreshToken = req.body.refreshToken;
+
+    }
+    //Try cookies (for production)
+    else if (req.cookies && req.cookies.refreshToken) {
+        refreshToken = req.cookies.refreshToken;
+    }
+
+    //If no token(token validation)
     if (!refreshToken) {
         return res.status(400).json({
             message: 'Refresh token required'
@@ -215,6 +257,10 @@ async function logoutUser(req, res) {
                 message: 'Token not found or already logged out'
             });
         }
+
+        //clear the cookies, so that the cookies doesnt caryy the tokens by any chance
+        res.clearCookie("accessToken");
+        res.clearCookie("refreshToken");
 
         return res.status(200).json({
             message: 'Logout successful'
