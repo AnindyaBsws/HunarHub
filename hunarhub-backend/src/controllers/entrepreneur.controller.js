@@ -18,20 +18,22 @@ async function getEntrepreneurs(req, res) {
 
         // Common filter (reuse for both queries)
         const filter = {
-            categories: {
-                some: {
-                    name: {
-                        equals: category,
-                        mode: "insensitive"
+                categories: {
+                    some: {
+                        name: {
+                            equals: category,
+                            mode: "insensitive"
+                        }
                     }
-                }
-            },
-            isAvailable: true,
+                },
 
-            ...(location && {
-                location: {
-                    contains: location,
-                    mode: "insensitive"
+                isAvailable: true,
+                status: "APPROVED",
+
+                ...(location && {
+                    location: {
+                        contains: location,
+                        mode: "insensitive"
                 }
             })
         };
