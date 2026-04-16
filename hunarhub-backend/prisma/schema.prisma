@@ -55,6 +55,7 @@ model EntrepreneurProfile {
 
   experiences Experience[]
   categories  Category[] 
+  services    Service[]
 
   @@index([location])
 }
@@ -91,4 +92,18 @@ model Category {
 
   // Relations
   entrepreneurs EntrepreneurProfile[]
+}
+
+
+model Service {
+  id          Int      @id @default(autoincrement())
+
+  title       String
+  description String?
+  price       Float
+
+  profileId   Int
+  profile     EntrepreneurProfile @relation(fields: [profileId], references: [id], onDelete: Cascade)
+
+  createdAt   DateTime @default(now())
 }
