@@ -28,8 +28,7 @@ async function getEntrepreneurs(req, res) {
                 },
 
                 isAvailable: true,
-                status: "APPROVED",
-
+                
                 ...(location && {
                     location: {
                         contains: location,

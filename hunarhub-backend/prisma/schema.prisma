@@ -49,8 +49,6 @@ model EntrepreneurProfile {
   phone     String   @unique
   avatarUrl String?
 
-  status    VerificationStatus @default(PENDING)
-
   isAvailable Boolean @default(true)
 
   createdAt DateTime @default(now())
