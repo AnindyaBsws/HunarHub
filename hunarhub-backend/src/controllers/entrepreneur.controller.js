@@ -2,33 +2,53 @@ import prisma from '../config/prisma.js';
 
 async function getEntrepreneurs(req, res) {
     try {
-        const { category, location } = req.query;
+        const { category, location, page, limit, sort } = req.query;
 
+        // Validate category
         if (!category) {
             return res.status(400).json({
                 message: "Category is required"
             });
         }
 
-        const entrepreneurs = await prisma.entrepreneurProfile.findMany({
-            where: {
-                categories: {
-                    some: {
-                        name: {
-                            equals: category,
-                            mode: "insensitive"
-                        }
-                    }
-                },
-                isAvailable: true,
+        // Pagination setup
+        const pageNumber = parseInt(page) || 1;
+        const limitNumber = parseInt(limit) || 5;
+        const skip = (pageNumber - 1) * limitNumber;
 
-                ...(location && {
-                    location: {
-                        contains: location,
+        // Common filter (reuse for both queries)
+        const filter = {
+            categories: {
+                some: {
+                    name: {
+                        equals: category,
                         mode: "insensitive"
                     }
-                })
+                }
             },
+            isAvailable: true,
+
+            ...(location && {
+                location: {
+                    contains: location,
+                    mode: "insensitive"
+                }
+            })
+        };
+
+        //Sorting
+        let orderBy = {};
+        if (sort === "newest") {
+            orderBy = { createdAt: "desc" };
+        }
+
+
+        // Fetch paginated data
+        const entrepreneurs = await prisma.entrepreneurProfile.findMany({
+            where: filter,
+            skip,
+            take: limitNumber,
+            orderBy,
 
             include: {
                 user: {
@@ -47,6 +67,12 @@ async function getEntrepreneurs(req, res) {
             }
         });
 
+        // Total count (for pagination)
+        const total = await prisma.entrepreneurProfile.count({
+            where: filter
+        });
+
+        // Format response
         const formatted = entrepreneurs.map(e => ({
             name: e.user.name,
             bio: e.bio,
@@ -57,8 +83,18 @@ async function getEntrepreneurs(req, res) {
                 : "No experience"
         }));
 
+        if (sort === "experience") {
+            formatted.sort((a, b) => {
+                const expA = parseInt(a.experience) || 0;
+                const expB = parseInt(b.experience) || 0;
+                return expB - expA;
+            });
+        }
+
         return res.status(200).json({
-            count: formatted.length,
+            count: total,
+            page: pageNumber,
+            totalPages: Math.ceil(total / limitNumber),
             entrepreneurs: formatted
         });
 
