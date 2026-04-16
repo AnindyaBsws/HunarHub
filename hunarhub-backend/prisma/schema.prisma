@@ -7,12 +7,19 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+enum VerificationStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
 model User {
   id        Int             @id @default(autoincrement())
   name      String
   email     String          @unique
   password  String
   createdAt DateTime        @default(now())
+  entrepreneurProfile EntrepreneurProfile?
 
   // Relation (one user → many refresh tokens)
   refreshTokens RefreshToken[]
@@ -24,4 +31,64 @@ model RefreshToken {
   userId    Int
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   createdAt DateTime @default(now())
+}
+
+
+
+model EntrepreneurProfile {
+  id        Int      @id @default(autoincrement())
+
+  userId    Int      @unique
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  bio       String?
+  location  String
+  phone     String   @unique
+  avatarUrl String?
+
+  status    VerificationStatus @default(PENDING)
+
+  isAvailable Boolean @default(true)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  experiences Experience[]
+  categories  Category[] 
+
+  @@index([location])
+}
+
+
+
+model Experience {
+  id          Int      @id @default(autoincrement())
+
+  profileId   Int
+  profile     EntrepreneurProfile @relation(fields: [profileId], references: [id], onDelete: Cascade)
+
+  sector      String
+  years       Int
+  isCurrent   Boolean
+  description String?
+
+  createdAt   DateTime @default(now())
+
+  @@index([profileId])
+}
+
+
+model Category {
+  id          Int      @id @default(autoincrement())
+  name        String   @unique
+  description String?
+  icon        String?
+
+  isActive    Boolean  @default(true)
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Relations
+  entrepreneurs EntrepreneurProfile[]
 }

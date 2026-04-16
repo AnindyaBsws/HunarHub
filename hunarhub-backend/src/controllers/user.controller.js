@@ -274,23 +274,4 @@ async function logoutUser(req, res) {
     }
 }
 
-
-
-
-//-----------User Controllers------------
-
-
-//.............Profile Controller Function..........
-// METHOD : GET
-async function getProfile(req,res){
-    const user = await prisma.user.findUnique({
-        where: { id: req.userId }
-    });
-
-    res.json({
-        message: 'Protected route accessed',
-        user
-    });
-}
-
-export { testUser,registerUser,loginUser,getProfile,refreshTokenController,logoutUser };
+export { testUser,registerUser,loginUser,refreshTokenController,logoutUser };
