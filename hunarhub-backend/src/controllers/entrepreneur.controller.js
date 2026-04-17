@@ -75,10 +75,14 @@ async function getEntrepreneurs(req, res) {
 
         // Format response
         const formatted = entrepreneurs.map(e => ({
+            id: e.id, // ✅ IMPORTANT
+
             name: e.user.name,
             bio: e.bio,
             location: e.location,
+
             categories: e.categories.map(c => c.name),
+
             experience: e.experiences.length
                 ? `${Math.max(...e.experiences.map(exp => exp.years))} years`
                 : "No experience"
