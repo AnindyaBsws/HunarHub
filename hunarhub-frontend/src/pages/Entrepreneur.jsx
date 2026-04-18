@@ -101,12 +101,30 @@ function Entrepreneur() {
         <p className="text-gray-400 mt-2">{data.location}</p>
 
         <div className="flex gap-2 mt-4">
-          {data.categories.map((c, i) => (
+        {data.categories.map((c, i) => (
             <span key={i} className="bg-white/10 px-3 py-1 rounded">
-              {c}
+            {c}
             </span>
-          ))}
+        ))}
         </div>
+
+        <p className="mt-4 text-gray-300">
+        Experience: {data.experience}
+        </p>
+
+        {/* 🔐 CONTACT SECTION */}
+        {data.hasAccess ? (
+        <div className="mt-6 bg-green-900/20 p-4 rounded">
+            <p>📞 Phone: {data.phone}</p>
+            <p>📧 Email: {data.email}</p>
+        </div>
+        ) : (
+        <p className="mt-6 text-yellow-400">
+            Request and get accepted to unlock contact details
+        </p>
+        )}
+
+        
 
         <p className="mt-4 text-gray-300">
           Experience: {data.experience}

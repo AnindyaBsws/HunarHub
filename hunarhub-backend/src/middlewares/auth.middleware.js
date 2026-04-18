@@ -1,35 +1,39 @@
-import { verifyToken } from '../utils/jwt.js';
+import jwt from "jsonwebtoken";
 
 function authMiddleware(req, res, next) {
-    let token;
+  let token;
 
-    // 1. Try to get token from cookies
-    if (req.cookies && req.cookies.accessToken) {
-        token = req.cookies.accessToken;
-    }
+  // 1. Try cookie
+  if (req.cookies && req.cookies.accessToken) {
+    token = req.cookies.accessToken;
+  }
 
-    // 2. Fallback to Authorization header
-    else if (req.headers.authorization && req.headers.authorization.startsWith('Bearer ')) {
-        token = req.headers.authorization.split(' ')[1];
-    }
+  // 2. Try Authorization header
+  else if (
+    req.headers.authorization &&
+    req.headers.authorization.startsWith("Bearer ")
+  ) {
+    token = req.headers.authorization.split(" ")[1];
+  }
 
-    // 3. If no token found
-    if (!token) {
-        return res.status(401).json({
-            message: 'No token provided'
-        });
-    }
+  // 🔥 NO TOKEN → allow as guest
+  if (!token) {
+    req.userId = null;
+    return next();
+  }
 
-    try {
-        const decoded = verifyToken(token, process.env.JWT_SECRET);
-        req.userId = decoded.id;
-        next();
+  try {
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
 
-    } catch (error) {
-        return res.status(401).json({
-            message: 'Invalid Token'
-        });
-    }
+    req.userId = decoded.id;
+
+    next();
+
+  } catch (error) {
+    // 🔥 INVALID TOKEN → treat as guest
+    req.userId = null;
+    next();
+  }
 }
 
 export default authMiddleware;

@@ -106,29 +106,40 @@ async function getEntrepreneurs(req, res) {
 async function getEntrepreneurById(req, res) {
   try {
     const { id } = req.params;
+    const userId = req.userId; // may be undefined if not logged in
 
     const profile = await prisma.entrepreneurProfile.findUnique({
-      where: {
-        id: Number(id),
-      },
+      where: { id: Number(id) },
       include: {
-        user: {
-          select: { name: true }
-        },
-        categories: {
-          select: { name: true }
-        },
+        user: true,
+        categories: { select: { name: true } },
         experiences: true
       }
     });
 
     if (!profile) {
-      return res.status(404).json({
-        message: "Entrepreneur not found"
-      });
+      return res.status(404).json({ message: "Entrepreneur not found" });
     }
 
-    return res.json({
+    // 🔐 CHECK: does user have accepted request?
+    let hasAccess = false;
+
+    if (userId) {
+      const accepted = await prisma.serviceRequest.findFirst({
+        where: {
+          userId,
+          status: "ACCEPTED",
+          service: {
+            profileId: profile.id
+          }
+        }
+      });
+
+      if (accepted) hasAccess = true;
+    }
+
+    // 🔥 BASE DATA (visible to everyone)
+    const baseData = {
       id: profile.id,
       name: profile.user.name,
       location: profile.location,
@@ -136,8 +147,20 @@ async function getEntrepreneurById(req, res) {
       categories: profile.categories.map(c => c.name),
       experience: profile.experiences.length
         ? `${Math.max(...profile.experiences.map(e => e.years))} years`
-        : "No experience"
-    });
+        : "No experience",
+      hasAccess
+    };
+
+    // 🔐 FULL DATA (only if accepted)
+    if (hasAccess) {
+      return res.json({
+        ...baseData,
+        phone: profile.phone,
+        email: profile.user.email
+      });
+    }
+
+    return res.json(baseData);
 
   } catch (err) {
     console.error(err);

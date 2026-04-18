@@ -33,8 +33,7 @@ router.post('/logout', logoutUser);
 router.get('/profile', authMiddleware, getProfile);
 router.post('/profile/create', authMiddleware, createProfile);
 router.get('/entrepreneurs', getEntrepreneurs);
-router.get('/entrepreneurs/:id', getEntrepreneurById);
-
+router.get('/entrepreneurs/:id', authMiddleware, getEntrepreneurById);
 
 
 //export route
