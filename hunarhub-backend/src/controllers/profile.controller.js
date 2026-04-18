@@ -83,7 +83,9 @@ async function createProfile(req, res) {
                 avatarUrl,
 
                 categories: {
-                    connect: (categories || []).map(id => ({ id }))
+                    connect: (categories || []).map(id => ({
+                        id: Number(id)
+                    }))
                 },
 
                 experiences: {

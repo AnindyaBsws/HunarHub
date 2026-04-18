@@ -134,6 +134,9 @@ model ServiceRequest {
 
   status    RequestStatus @default(PENDING)
 
+  sellerMessage String?
+  seenByUser    Boolean @default(false)
+
   createdAt DateTime @default(now())
   review Review?
 

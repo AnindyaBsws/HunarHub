@@ -6,7 +6,7 @@ function Card({ data }) {
 
     return (
         <motion.div
-            onClick={() => navigate(`/entrepreneur/${data.id}`)} // ✅ FIXED
+            onClick={() => navigate(`/entrepreneur/${data.id}`)} 
             whileHover={{ scale: 1.03 }}
             className="cursor-pointer bg-white/10 backdrop-blur-lg border border-white/20 
                         rounded-xl p-5 text-white shadow-lg"

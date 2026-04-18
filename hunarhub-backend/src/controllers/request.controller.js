@@ -1,23 +1,21 @@
 import prisma from '../config/prisma.js';
 
+
+// 🔥 CREATE REQUEST
 async function createRequest(req, res) {
     try {
-        const userId = req.userId;
+        const userId = req.userId || req.user?.id;
         const { serviceId, message } = req.body;
 
-        //Validate input
         if (!serviceId) {
             return res.status(400).json({
                 message: "Service ID is required"
             });
         }
 
-        //Check if service exists
         const service = await prisma.service.findUnique({
-            where: { id: serviceId },
-            include: {
-                profile: true
-            }
+            where: { id: Number(serviceId) },
+            include: { profile: true }
         });
 
         if (!service) {
@@ -26,14 +24,15 @@ async function createRequest(req, res) {
             });
         }
 
-        //Prevent requesting own service
+        // ❌ Prevent self-request
         if (service.profile.userId === userId) {
             return res.status(400).json({
                 message: "You cannot request your own service"
             });
         }
 
-        const existingRequest = await prisma.serviceRequest.findFirst({
+        // ❌ Prevent duplicate pending
+        const existing = await prisma.serviceRequest.findFirst({
             where: {
                 userId,
                 serviceId,
@@ -41,13 +40,12 @@ async function createRequest(req, res) {
             }
         });
 
-        if (existingRequest && existingRequest.status === "PENDING") {
+        if (existing) {
             return res.status(400).json({
-                message: "You already have a pending request"
+                message: "Already requested"
             });
         }
 
-        //Create request
         const request = await prisma.serviceRequest.create({
             data: {
                 userId,
@@ -57,101 +55,116 @@ async function createRequest(req, res) {
         });
 
         return res.status(201).json({
-            message: "Request sent successfully",
+            message: "Request sent",
             request
         });
 
-    } catch (error) {
-        console.error(error);
-
-        return res.status(500).json({
-            message: "Server error"
-        });
+    } catch (err) {
+        console.error("CREATE REQUEST ERROR:", err);
+        res.status(500).json({ message: "Server error" });
     }
 }
 
 
-
-
+// 🔥 INCOMING (SELLER)
 async function getIncomingRequests(req, res) {
     try {
-        const userId = req.userId;
-
-        // get optional status from query
+        const userId = req.userId || req.user?.id;
         const { status } = req.query;
 
-        //Find entrepreneur profile
         const profile = await prisma.entrepreneurProfile.findUnique({
             where: { userId }
         });
 
         if (!profile) {
             return res.status(403).json({
-                message: "Not an entrepreneur"
+                message: "Not a seller"
             });
         }
 
-        // Build filter (THIS IS THE IMPORTANT PART)
-        const filter = {
-            service: {
-                profileId: profile.id
-            },
-
-            // dynamic status filter
-            ...(status && { status })
-        };
-
-        //Fetch requests
         const requests = await prisma.serviceRequest.findMany({
-            where: filter,
+            where: {
+                service: {
+                    profileId: profile.id
+                },
+
+                // 🔥 REMOVE REJECTED COMPLETELY
+                NOT: {
+                    status: "REJECTED"
+                },
+
+                ...(status && { status })
+            },
             include: {
                 user: {
-                    select: {
-                        name: true,
-                        email: true
-                    }
+                    select: { name: true, email: true }
                 },
                 service: {
-                    select: {
-                        title: true,
-                        price: true
-                    }
+                    select: { title: true, price: true }
                 }
-            }
+            },
+            orderBy: { createdAt: "desc" }
         });
 
-        return res.status(200).json({
-            count: requests.length,
-            requests
-        });
+        res.json({ requests });
 
-    } catch (error) {
-        console.error(error);
-        return res.status(500).json({
-            message: "Server error"
-        });
+    } catch (err) {
+        console.error("INCOMING ERROR:", err);
+        res.status(500).json({ message: "Server error" });
     }
 }
 
 
+// 🔥 MY REQUESTS (USER)
+async function getMyRequests(req, res) {
+    try {
+        const userId = req.userId || req.user?.id;
+
+        const requests = await prisma.serviceRequest.findMany({
+            where: { userId },
+            include: {
+                service: {
+                    select: {
+                        title: true,
+                        price: true,
+                        profile: {
+                            include: {
+                                user: {
+                                    select: { name: true }
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            orderBy: { createdAt: "desc" }
+        });
+
+        res.json({ requests });
+
+    } catch (err) {
+        console.error("MY REQUEST ERROR:", err);
+        res.status(500).json({ message: "Server error" });
+    }
+}
 
 
+// 🔥 UPDATE STATUS (SELLER ONLY)
 async function updateRequestStatus(req, res) {
     try {
-        const userId = req.userId;
-        const requestId = parseInt(req.params.id);
-        const { status } = req.body;
+        const { id } = req.params;
 
-        // Validate status
-        if (!["ACCEPTED", "REJECTED"].includes(status)) {
+        // ✅ SAFE BODY
+        const { status, sellerMessage } = req.body || {};
+
+        if (!status) {
             return res.status(400).json({
-                message: "Status must be ACCEPTED or REJECTED"
+                message: "Status required"
             });
         }
 
-        // Get request with ownership info
         const request = await prisma.serviceRequest.findUnique({
-            where: { id: requestId },
+            where: { id: Number(id) },
             include: {
                 service: {
                     include: {
@@ -167,38 +180,108 @@ async function updateRequestStatus(req, res) {
             });
         }
 
-        // Check if current user owns this service
+        const userId = req.userId || req.user?.id;
+
+        // ❌ Only service owner can update
         if (request.service.profile.userId !== userId) {
             return res.status(403).json({
-                message: "Not authorized to update this request"
+                message: "Not authorized"
             });
         }
 
-        // Prevent re-updating (important logic)
         if (request.status !== "PENDING") {
             return res.status(400).json({
-                message: "Request already processed"
+                message: "Already updated"
             });
         }
 
-        // Update status
         const updated = await prisma.serviceRequest.update({
-            where: { id: requestId },
-            data: { status }
+            where: { id: Number(id) },
+            data: {
+                status,
+                sellerMessage: status === "ACCEPTED" ? sellerMessage : null
+            }
         });
 
-        return res.status(200).json({
-            message: `Request ${status.toLowerCase()}`,
-            updated
+        res.json({
+            message: "Updated",
+            request: updated
         });
 
-    } catch (error) {
-        console.error(error);
-        return res.status(500).json({
-            message: "Server error"
-        });
+    } catch (err) {
+        console.error("UPDATE ERROR:", err);
+        res.status(500).json({ message: "Server error" });
     }
 }
 
-export { createRequest, getIncomingRequests, updateRequestStatus };
 
+// 🔥 MARK SEEN (USER SIDE)
+async function markRequestsSeen(req, res) {
+  try {
+    const userId = req.userId;
+
+    await prisma.serviceRequest.updateMany({
+      where: {
+        userId,
+        status: "REJECTED",
+        seenByUser: false
+      },
+      data: {
+        seenByUser: true
+      }
+    });
+
+    res.json({ message: "Seen updated" });
+
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: "Server error" });
+  }
+}
+
+
+// 🔥 DELETE (WITHDRAW)
+async function deleteRequest(req, res) {
+    try {
+        const userId = req.userId || req.user?.id;
+        const { id } = req.params;
+
+        const request = await prisma.serviceRequest.findUnique({
+            where: { id: Number(id) }
+        });
+
+        if (!request || request.userId !== userId) {
+            return res.status(403).json({
+                message: "Not allowed"
+            });
+        }
+
+        if (request.status !== "PENDING") {
+            return res.status(400).json({
+                message: "Only pending can be withdrawn"
+            });
+        }
+
+        await prisma.serviceRequest.delete({
+            where: { id: Number(id) }
+        });
+
+        res.json({
+            message: "Request withdrawn"
+        });
+
+    } catch (err) {
+        console.error("DELETE ERROR:", err);
+        res.status(500).json({ message: "Server error" });
+    }
+}
+
+
+export {
+    createRequest,
+    getIncomingRequests,
+    updateRequestStatus,
+    getMyRequests,
+    deleteRequest,
+    markRequestsSeen
+};

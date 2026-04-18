@@ -5,7 +5,7 @@ import express from 'express';
 //Import controllers
 import { testUser,registerUser,loginUser,refreshTokenController,logoutUser } from '../controllers/user.controller.js';
 import { getProfile, createProfile } from "../controllers/profile.controller.js";
-import { getEntrepreneurs } from '../controllers/entrepreneur.controller.js';
+import { getEntrepreneurs, getEntrepreneurById } from '../controllers/entrepreneur.controller.js';
 
 
 //Import Middlewares
@@ -33,6 +33,7 @@ router.post('/logout', logoutUser);
 router.get('/profile', authMiddleware, getProfile);
 router.post('/profile/create', authMiddleware, createProfile);
 router.get('/entrepreneurs', getEntrepreneurs);
+router.get('/entrepreneurs/:id', getEntrepreneurById);
 
 
 
