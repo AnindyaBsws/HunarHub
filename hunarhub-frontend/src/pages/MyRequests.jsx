@@ -4,9 +4,13 @@ import Navbar from "../components/Navbar";
 import { useAuth } from "../context/AuthContext";
 import { useNotifications } from "../hooks/useNotifications";
 import { useNavigate } from "react-router-dom";
+import ReviewModal from "../components/ReviewModal";
 
 function MyRequests() {
   const [requests, setRequests] = useState([]);
+  const [selectedRequest, setSelectedRequest] = useState(null);
+  const [reviewRequestId, setReviewRequestId] = useState(null);
+
   const { user } = useAuth();
   const { clearMyRequests } = useNotifications(user);
   const navigate = useNavigate();
@@ -17,7 +21,6 @@ function MyRequests() {
       setRequests(res.data.requests);
 
       clearMyRequests(res.data.requests.length);
-
     } catch (err) {
       console.error(err);
     }
@@ -49,9 +52,9 @@ function MyRequests() {
 
         {/* 🔥 NOTICE */}
         <p className="text-gray-400 mb-6 text-sm">
-          • Accepted requests auto-delete after 2 days  
-          • Rejected requests auto-delete after 1 day  
-          • Only pending requests can be withdrawn  
+          • Accepted requests auto-delete after 2 days <br />
+          • Rejected requests auto-delete after 1 day <br />
+          • Only pending requests can be withdrawn
         </p>
 
         {requests.length === 0 ? (
@@ -62,10 +65,12 @@ function MyRequests() {
               key={r.id}
               className="bg-white/10 p-5 rounded-xl mb-4 border border-white/20"
             >
+              {/* SERVICE */}
               <p className="text-lg">{r.service.title}</p>
 
               <p className="text-amber-200">₹ {r.service.price}</p>
 
+              {/* SELLER */}
               <p className="text-gray-400 text-sm">
                 Seller: {r.service.profile.user.name}
               </p>
@@ -83,31 +88,60 @@ function MyRequests() {
                 {r.status}
               </p>
 
-              {/* 🔥 CONNECT */}
-              {r.status === "ACCEPTED" && (
-                <button
-                  onClick={() =>
-                    navigate(`/entrepreneur/${r.service.profile.id}`)
-                  }
-                  className="mt-3 bg-green-500 px-4 py-2 rounded"
-                >
-                  Connect
-                </button>
-              )}
+              {/* 🔥 ACTIONS */}
+              <div className="flex gap-3 mt-3">
 
-              {/* 🔥 WITHDRAW */}
-              {r.status === "PENDING" && (
-                <button
-                  onClick={() => handleDelete(r.id)}
-                  className="mt-3 bg-red-500 px-4 py-2 rounded"
-                >
-                  Withdraw
-                </button>
-              )}
+                {/* CONNECT */}
+                {r.status === "ACCEPTED" && !r.review && (
+                  <button
+                    onClick={() =>
+                      navigate(`/entrepreneur/${r.service.profile.id}`)
+                    }
+                    className="bg-green-500 px-4 py-2 rounded"
+                  >
+                    Connect
+                  </button>
+                )}
+
+                {/* ⭐ REVIEW */}
+                {r.status === "ACCEPTED" && !r.review && (
+                    <button
+                        onClick={() => setReviewRequestId(r.id)}
+                        className="mt-3 bg-yellow-400 px-4 py-2 rounded"
+                    >
+                        Leave Review ⭐
+                    </button>
+                )}
+
+                <ReviewModal
+                isOpen={!!reviewRequestId}
+                onClose={() => setReviewRequestId(null)}
+                requestId={reviewRequestId}
+                onSuccess={fetchRequests}   
+                />
+
+                {/* WITHDRAW */}
+                {r.status === "PENDING" && (
+                  <button
+                    onClick={() => handleDelete(r.id)}
+                    className="bg-red-500 px-4 py-2 rounded"
+                  >
+                    Withdraw
+                  </button>
+                )}
+
+              </div>
             </div>
           ))
         )}
       </div>
+
+      {/* 🔥 REVIEW MODAL */}
+      <ReviewModal
+        isOpen={!!selectedRequest}
+        onClose={() => setSelectedRequest(null)}
+        requestId={selectedRequest}
+      />
     </div>
   );
 }

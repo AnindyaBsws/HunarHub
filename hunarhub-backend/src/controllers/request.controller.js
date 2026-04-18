@@ -122,9 +122,11 @@ async function getMyRequests(req, res) {
 
         const requests = await prisma.serviceRequest.findMany({
             where: { userId },
+
             include: {
                 service: {
                     select: {
+                        id: true,
                         title: true,
                         price: true,
                         profile: {
@@ -135,16 +137,22 @@ async function getMyRequests(req, res) {
                             }
                         }
                     }
-                }
+                },
+
+                // ✅ VERY IMPORTANT (THIS FIXES YOUR BUG)
+                review: true
             },
+
             orderBy: { createdAt: "desc" }
         });
 
-        res.json({ requests });
+        return res.json({ requests });
 
     } catch (err) {
         console.error("MY REQUEST ERROR:", err);
-        res.status(500).json({ message: "Server error" });
+        return res.status(500).json({
+            message: "Server error"
+        });
     }
 }
 

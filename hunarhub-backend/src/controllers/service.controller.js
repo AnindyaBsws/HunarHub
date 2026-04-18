@@ -1,19 +1,18 @@
 import prisma from '../config/prisma.js';
 
+
+// 🔥 CREATE SERVICE
 async function createService(req, res) {
     try {
         const userId = req.userId;
-
         const { title, description, price } = req.body;
 
-        //Validate input
         if (!title || !price) {
             return res.status(400).json({
                 message: "Title and price are required"
             });
         }
 
-        //Get entrepreneur profile
         const profile = await prisma.entrepreneurProfile.findUnique({
             where: { userId }
         });
@@ -24,7 +23,6 @@ async function createService(req, res) {
             });
         }
 
-        //Create service
         const service = await prisma.service.create({
             data: {
                 title,
@@ -48,6 +46,7 @@ async function createService(req, res) {
 }
 
 
+// 🔥 GET MY SERVICES (WITH RATINGS)
 async function getMyServices(req, res) {
     try {
         const userId = req.userId;
@@ -63,17 +62,32 @@ async function getMyServices(req, res) {
         }
 
         const services = await prisma.service.findMany({
-            where: {
-                profileId: profile.id
+            where: { profileId: profile.id },
+
+            include: {
+                reviews: {
+                    select: { rating: true }
+                }
             }
         });
 
-        const formatted = services.map(s => ({
-            id: s.id,
-            title: s.title,
-            description: s.description,
-            price: s.price
-        }));
+        const formatted = services.map(s => {
+            const ratings = s.reviews.map(r => r.rating);
+
+            const avgRating =
+                ratings.length > 0
+                    ? (ratings.reduce((a, b) => a + b, 0) / ratings.length).toFixed(1)
+                    : null;
+
+            return {
+                id: s.id,
+                title: s.title,
+                description: s.description,
+                price: s.price,
+                rating: avgRating,
+                totalReviews: ratings.length
+            };
+        });
 
         return res.status(200).json({ services: formatted });
 
@@ -86,7 +100,49 @@ async function getMyServices(req, res) {
 }
 
 
-// UPDATE SERVICE
+// 🔥 GET SERVICES BY PROFILE (IMPORTANT FOR ENTREPRENEUR PAGE)
+async function getServicesByProfile(req, res) {
+    try {
+        const { id } = req.params;
+
+        const services = await prisma.service.findMany({
+            where: { profileId: Number(id) },
+
+            include: {
+                reviews: {
+                    select: { rating: true }
+                }
+            }
+        });
+
+        const formatted = services.map(s => {
+            const ratings = s.reviews.map(r => r.rating);
+
+            const avgRating =
+                ratings.length > 0
+                    ? (ratings.reduce((a, b) => a + b, 0) / ratings.length).toFixed(1)
+                    : null;
+
+            return {
+                id: s.id,
+                title: s.title,
+                description: s.description,
+                price: s.price,
+                rating: avgRating,
+                totalReviews: ratings.length
+            };
+        });
+
+        return res.json({ services: formatted });
+
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ message: "Server error" });
+    }
+}
+
+
+// 🔥 UPDATE SERVICE
 async function updateService(req, res) {
     try {
         const userId = req.userId;
@@ -122,26 +178,8 @@ async function updateService(req, res) {
     }
 }
 
-async function getServicesByProfile(req, res) {
-    try {
-        const { id } = req.params;
 
-        const services = await prisma.service.findMany({
-            where: {
-                profileId: Number(id)
-            }
-        });
-
-        return res.json({ services });
-
-    } catch (err) {
-        console.error(err);
-        res.status(500).json({ message: "Server error" });
-    }
-}
-
-
-// DELETE SERVICE
+// 🔥 DELETE SERVICE
 async function deleteService(req, res) {
     try {
         const userId = req.userId;
@@ -172,17 +210,14 @@ async function deleteService(req, res) {
 }
 
 
-//Listing Services(Service Category + location + price) (Sorting is done in Entreprenuer Controller)
+// 🔥 EXPLORE SERVICES (WITH RATINGS)
 async function getAllServices(req, res) {
     try {
         const { category, location, maxPrice } = req.query;
 
-        // Build filter
         const filter = {
             ...(maxPrice && {
-                price: {
-                    lte: parseFloat(maxPrice)
-                }
+                price: { lte: parseFloat(maxPrice) }
             }),
 
             profile: {
@@ -221,18 +256,33 @@ async function getAllServices(req, res) {
                             select: { name: true }
                         }
                     }
+                },
+
+                reviews: {
+                    select: { rating: true }
                 }
             }
         });
 
-        // Format response
-        const formatted = services.map(s => ({
-            title: s.title,
-            price: s.price,
-            entrepreneur: s.profile.user.name,
-            location: s.profile.location,
-            categories: s.profile.categories.map(c => c.name)
-        }));
+        const formatted = services.map(s => {
+            const ratings = s.reviews.map(r => r.rating);
+
+            const avgRating =
+                ratings.length > 0
+                    ? (ratings.reduce((a, b) => a + b, 0) / ratings.length).toFixed(1)
+                    : null;
+
+            return {
+                id: s.id,
+                title: s.title,
+                price: s.price,
+                entrepreneur: s.profile.user.name,
+                location: s.profile.location,
+                categories: s.profile.categories.map(c => c.name),
+                rating: avgRating,
+                totalReviews: ratings.length
+            };
+        });
 
         return res.status(200).json({
             count: formatted.length,
@@ -247,4 +297,12 @@ async function getAllServices(req, res) {
     }
 }
 
-export { createService, getAllServices, getMyServices, updateService, deleteService, getServicesByProfile };
+
+export {
+    createService,
+    getAllServices,
+    getMyServices,
+    updateService,
+    deleteService,
+    getServicesByProfile
+};

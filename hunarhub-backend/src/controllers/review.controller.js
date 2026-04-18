@@ -1,5 +1,7 @@
 import prisma from '../config/prisma.js';
 
+
+// 🔥 CREATE REVIEW
 async function createReview(req, res) {
     try {
         const userId = req.userId;
@@ -20,10 +22,7 @@ async function createReview(req, res) {
 
         // Get request
         const request = await prisma.serviceRequest.findUnique({
-            where: { id: requestId },
-            include: {
-                service: true
-            }
+            where: { id: requestId }
         });
 
         if (!request) {
@@ -32,17 +31,28 @@ async function createReview(req, res) {
             });
         }
 
-        //Check ownership
+        // Ownership check
         if (request.userId !== userId) {
             return res.status(403).json({
                 message: "You cannot review this request"
             });
         }
 
-        //Check status
+        // Only accepted
         if (request.status !== "ACCEPTED") {
             return res.status(400).json({
-                message: "You can only review accepted requests"
+                message: "Only accepted requests can be reviewed"
+            });
+        }
+
+        // 🔥 PREVENT DUPLICATE (cleaner than prisma error)
+        const existingReview = await prisma.review.findUnique({
+            where: { requestId }
+        });
+
+        if (existingReview) {
+            return res.status(400).json({
+                message: "You already reviewed this request"
             });
         }
 
@@ -58,24 +68,40 @@ async function createReview(req, res) {
         });
 
         return res.status(201).json({
-            message: "Review submitted successfully",
+            message: "Review submitted",
             review
         });
 
     } catch (error) {
         console.error(error);
-
-        // Handle duplicate review
-        if (error.code === 'P2002') {
-            return res.status(400).json({
-                message: "Review already exists for this request"
-            });
-        }
-
         return res.status(500).json({
             message: "Server error"
         });
     }
 }
 
-export { createReview };
+
+// 🔥 GET REVIEWS OF A SERVICE
+async function getServiceReviews(req, res) {
+    try {
+        const { serviceId } = req.params;
+
+        const reviews = await prisma.review.findMany({
+            where: { serviceId: Number(serviceId) },
+            include: {
+                user: {
+                    select: { name: true }
+                }
+            },
+            orderBy: { createdAt: "desc" }
+        });
+
+        return res.json({ reviews });
+
+    } catch (err) {
+        console.error("GET REVIEWS ERROR:", err);
+        res.status(500).json({ message: "Server error" });
+    }
+}
+
+export { createReview, getServiceReviews };
