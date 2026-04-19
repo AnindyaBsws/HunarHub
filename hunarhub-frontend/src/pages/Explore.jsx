@@ -7,16 +7,12 @@ import { motion } from "framer-motion";
 
 function Explore() {
   const [entrepreneurs, setEntrepreneurs] = useState([]);
-
   const [categories, setCategories] = useState([]);
   const [selectedCategory, setSelectedCategory] = useState(null);
-
   const [location, setLocation] = useState("");
   const [sort, setSort] = useState("");
-
   const [loading, setLoading] = useState(false);
 
-  // 🔥 FETCH CATEGORIES
   const fetchCategories = async () => {
     try {
       const res = await API.get("/categories");
@@ -26,19 +22,16 @@ function Explore() {
     }
   };
 
-  // 🔥 FETCH ENTREPRENEURS
   const fetchEntrepreneurs = async () => {
     try {
       setLoading(true);
 
       const params = {};
-
       if (selectedCategory) params.category = selectedCategory.id;
       if (location.trim()) params.location = location;
       if (sort) params.sort = sort;
 
       const res = await API.get("/users/entrepreneurs", { params });
-
       setEntrepreneurs(res.data.entrepreneurs);
     } catch (err) {
       console.error(err);
@@ -47,71 +40,109 @@ function Explore() {
     }
   };
 
-  // ✅ LOAD INITIAL DATA
   useEffect(() => {
     fetchCategories();
     fetchEntrepreneurs();
   }, []);
 
   return (
-    <div className="min-h-screen bg-black text-white">
-
+    <div className="min-h-screen bg-[#f9fafb] text-black">
       <Navbar />
 
-      {/* 🔥 FILTERS */}
-      <div className="pt-28 px-10 flex gap-4 flex-wrap items-center">
+      {/* 🔥 HERO SECTION */}
+      <div className="pt-28 px-6 md:px-10 text-center">
+        <h1 className="text-3xl md:text-4xl font-bold mb-3">
+          Find Skilled Professionals
+        </h1>
+        <p className="text-gray-500 mb-6">
+          Discover experts near you for any service
+        </p>
 
-        {/* CATEGORY DROPDOWN */}
-        <CategorySelect
-          categories={categories}
-          selected={selectedCategory}
-          setSelected={setSelectedCategory}
-        />
+        {/* 🔥 SEARCH BAR */}
+        <div className="flex flex-wrap gap-3 justify-center bg-white p-3 rounded-xl shadow-md max-w-4xl mx-auto">
 
-        {/* LOCATION */}
-        <input
-          placeholder="Location"
-          value={location}
-          onChange={(e) => setLocation(e.target.value)}
-          className="px-4 py-2 rounded bg-white/10 border border-white/20 outline-none"
-        />
+          <CategorySelect
+            categories={categories}
+            selected={selectedCategory}
+            setSelected={setSelectedCategory}
+          />
 
-        {/* SORT */}
-        <select
-          value={sort}
-          onChange={(e) => setSort(e.target.value)}
-          className="px-4 py-2 rounded bg-white/10 border border-white/20"
-        >
-          <option value="">Sort</option>
-          <option value="newest">Newest</option>
-          <option value="experience">Experience</option>
-        </select>
+          <input
+            placeholder="📍 Location"
+            value={location}
+            onChange={(e) => setLocation(e.target.value)}
+            className="px-4 py-2 rounded-lg border border-gray-200 
+                       focus:outline-none focus:ring-2 focus:ring-amber-300 
+                       bg-white w-[180px]"
+          />
 
-        {/* APPLY BUTTON */}
+          <select
+            value={sort}
+            onChange={(e) => setSort(e.target.value)}
+            className="px-4 py-2 rounded-lg border border-gray-200 
+                       focus:outline-none focus:ring-2 focus:ring-amber-300 
+                       bg-white"
+          >
+            <option value="">Sort</option>
+            <option value="newest">Newest</option>
+            <option value="experience">Experience</option>
+          </select>
+
+          <button
+            onClick={fetchEntrepreneurs}
+            disabled={loading}
+            className="bg-amber-400 text-black px-6 py-2 rounded-lg font-semibold
+                       hover:bg-amber-300 active:scale-95 transition"
+          >
+            {loading ? "Searching..." : "Search"}
+          </button>
+        </div>
+      </div>
+
+      {/* 🔥 CATEGORY CHIPS */}
+      <div className="px-6 md:px-10 mt-8 flex gap-3 overflow-x-auto no-scrollbar">
+
         <button
-          onClick={fetchEntrepreneurs}
-          disabled={loading}
-          className="bg-amber-200 text-black px-4 py-2 rounded cursor-pointer 
-                     hover:opacity-90 transition disabled:opacity-50"
+          onClick={() => setSelectedCategory(null)}
+          className={`px-4 py-1 rounded-full border ${
+            !selectedCategory
+              ? "bg-black text-white"
+              : "bg-white text-gray-600"
+          }`}
         >
-          {loading ? "Applying..." : "Apply"}
+          All
         </button>
+
+        {categories.map((cat) => (
+          <button
+            key={cat.id}
+            onClick={() => setSelectedCategory(cat)}
+            className={`px-4 py-1 rounded-full border whitespace-nowrap ${
+              selectedCategory?.id === cat.id
+                ? "bg-black text-white"
+                : "bg-white text-gray-600"
+            }`}
+          >
+            {cat.name}
+          </button>
+        ))}
       </div>
 
       {/* 🔥 RESULTS */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 px-10 mt-10">
+      <div className="px-6 md:px-10 mt-10 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
 
         {loading ? (
-          <p className="text-gray-400">Loading...</p>
+          <p className="text-gray-500">Loading...</p>
         ) : entrepreneurs.length === 0 ? (
-          <p className="text-gray-500">No results found</p>
+          <p className="text-gray-400">No results found</p>
         ) : (
           entrepreneurs.map((e, i) => (
             <motion.div
               key={i}
-              initial={{ opacity: 0, y: 40 }}
+              initial={{ opacity: 0, y: 30 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: i * 0.1 }}
+              transition={{ delay: i * 0.05 }}
+              className="hover:-translate-y-1 transition"
             >
               <Card data={e} />
             </motion.div>
@@ -119,7 +150,6 @@ function Explore() {
         )}
 
       </div>
-
     </div>
   );
 }

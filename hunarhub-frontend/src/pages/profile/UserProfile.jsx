@@ -38,51 +38,67 @@ function UserProfile() {
   };
 
   return (
-    <div className="min-h-screen bg-black text-white px-6 py-10">
-      <div className="max-w-2xl bg-white/10 p-6 rounded-xl">
+    <div className="pt-24 px-4 md:px-10 max-w-3xl mx-auto">
 
-        <h2 className="text-2xl mb-4">User Profile</h2>
+      {/* HEADER */}
+      <div className="mb-10">
+        <h1 className="text-3xl md:text-4xl font-bold">
+          {user.name}
+        </h1>
+        <p className="text-gray-500 mt-1">
+          {user.email}
+        </p>
+      </div>
 
-        <p><strong>Name:</strong> {user.name}</p>
-        <p><strong>Email:</strong> {user.email}</p>
+      {/* PROFILE CARD */}
+      <div className="bg-white p-6 rounded-2xl border shadow-sm">
 
-        {/* ✅ ALWAYS SHOW PHONE */}
-        <div className="mt-4">
-          <p className="text-gray-400">Phone</p>
+        <p className="text-sm text-gray-500 mb-2">Phone</p>
 
-          {editing ? (
-            <div className="flex gap-2 mt-1">
-              <input
-                value={phone}
-                onChange={(e) => setPhone(e.target.value)}
-                className="px-3 py-2 bg-white/10 border rounded w-full"
-              />
-              <button
-                onClick={updatePhone}
-                className="bg-green-500 px-3 rounded"
-              >
-                Save
-              </button>
-            </div>
-          ) : (
-            <div className="flex justify-between mt-1">
-              <p>{phone || "Not set"}</p>
-              <button onClick={() => setEditing(true)}>Edit</button>
-            </div>
-          )}
-        </div>
-
-        {/* ✅ FIX NAVIGATION */}
-        {!isSeller && (
-          <button
-            onClick={() => navigate("/become-seller")}
-            className="mt-6 bg-amber-200 text-black px-4 py-2 rounded"
-          >
-            Become Seller
-          </button>
+        {editing ? (
+          <div className="flex gap-2">
+            <input
+              value={phone}
+              onChange={(e) => setPhone(e.target.value)}
+              className="flex-1 px-3 py-2 border rounded-lg 
+                         focus:outline-none focus:ring-2 focus:ring-amber-200"
+            />
+            <button
+              onClick={updatePhone}
+              className="bg-black text-white px-4 rounded-lg"
+            >
+              Save
+            </button>
+          </div>
+        ) : (
+          <div className="flex justify-between items-center">
+            <p className="text-gray-800">
+              {phone || "Not set"}
+            </p>
+            <button
+              onClick={() => setEditing(true)}
+              className="text-sm text-gray-500 hover:text-black"
+            >
+              Edit
+            </button>
+          </div>
         )}
 
       </div>
+
+      {/* CTA */}
+      {!isSeller && (
+        <div className="mt-8">
+          <button
+            onClick={() => navigate("/become-seller")}
+            className="w-full md:w-auto bg-amber-200 hover:bg-amber-300 
+                       px-6 py-3 rounded-full font-semibold"
+          >
+            Become a Seller 🚀
+          </button>
+        </div>
+      )}
+
     </div>
   );
 }

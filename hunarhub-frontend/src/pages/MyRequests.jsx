@@ -5,6 +5,7 @@ import { useAuth } from "../context/AuthContext";
 import { useNotifications } from "../hooks/useNotifications";
 import { useNavigate } from "react-router-dom";
 import ReviewModal from "../components/ReviewModal";
+import { motion } from "framer-motion";
 
 function MyRequests() {
   const [requests, setRequests] = useState([]);
@@ -26,7 +27,6 @@ function MyRequests() {
     }
   };
 
-  // 🔥 WITHDRAW (ONLY PENDING)
   const handleDelete = async (id) => {
     const confirm = window.confirm("Withdraw this request?");
     if (!confirm) return;
@@ -44,99 +44,135 @@ function MyRequests() {
   }, []);
 
   return (
-    <div className="min-h-screen bg-black text-white">
+    <div className="min-h-screen bg-[#f9fafb] text-black">
       <Navbar />
 
-      <div className="pt-28 px-10">
-        <h1 className="text-3xl mb-2">My Requests</h1>
+      <div className="pt-24 px-4 md:px-10 max-w-6xl mx-auto">
 
-        {/* 🔥 NOTICE */}
-        <p className="text-gray-400 mb-6 text-sm">
+        {/* HEADER */}
+        <h1 className="text-3xl font-bold mb-3">
+          My Requests
+        </h1>
+
+        {/* NOTICE */}
+        <p className="text-gray-500 mb-8 text-sm">
           • Accepted requests auto-delete after 2 days <br />
           • Rejected requests auto-delete after 1 day <br />
           • Only pending requests can be withdrawn
         </p>
 
         {requests.length === 0 ? (
-          <p className="text-gray-500">No requests</p>
+          <div className="text-center mt-20 text-gray-500">
+            No requests
+          </div>
         ) : (
-          requests.map((r) => (
-            <div
-              key={r.id}
-              className="bg-white/10 p-5 rounded-xl mb-4 border border-white/20"
-            >
-              {/* SERVICE */}
-              <p className="text-lg">{r.service.title}</p>
+          <div className="flex flex-col gap-6">
 
-              <p className="text-amber-200">₹ {r.service.price}</p>
-
-              {/* SELLER */}
-              <p className="text-gray-400 text-sm">
-                Seller: {r.service.profile.user.name}
-              </p>
-
-              {/* STATUS */}
-              <p
-                className={`mt-2 ${
-                  r.status === "ACCEPTED"
-                    ? "text-green-400"
-                    : r.status === "REJECTED"
-                    ? "text-red-400"
-                    : "text-blue-400"
-                }`}
+            {requests.map((r, i) => (
+              <motion.div
+                key={r.id}
+                initial={{ opacity: 0, y: 30 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: i * 0.05 }}
+                className="bg-white rounded-2xl p-5 shadow-sm border border-gray-100
+                           hover:shadow-md transition-all"
               >
-                {r.status}
-              </p>
 
-              {/* 🔥 ACTIONS */}
-              <div className="flex gap-3 mt-3">
+                {/* TOP ROW */}
+                <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3">
 
-                {/* CONNECT */}
-                {r.status === "ACCEPTED" && !r.review && (
-                  <button
-                    onClick={() =>
-                      navigate(`/entrepreneur/${r.service.profile.id}`)
-                    }
-                    className="bg-green-500 px-4 py-2 rounded"
+                  {/* SERVICE */}
+                  <div>
+                    <p className="text-sm text-gray-400">Service</p>
+                    <p className="font-semibold text-lg">
+                      {r.service.title}
+                    </p>
+                  </div>
+
+                  {/* STATUS BADGE */}
+                  <span
+                    className={`px-3 py-1 text-xs rounded-full font-medium
+                      ${
+                        r.status === "ACCEPTED"
+                          ? "bg-green-100 text-green-600"
+                          : r.status === "REJECTED"
+                          ? "bg-red-100 text-red-600"
+                          : "bg-blue-100 text-blue-600"
+                      }`}
                   >
-                    Connect
-                  </button>
-                )}
+                    {r.status}
+                  </span>
+                </div>
 
-                {/* ⭐ REVIEW */}
-                {r.status === "ACCEPTED" && !r.review && (
+                {/* PRICE + SELLER */}
+                <div className="mt-4 flex justify-between items-center">
+                  <div>
+                    <p className="text-sm text-gray-400">Seller</p>
+                    <p className="text-gray-700">
+                      {r.service.profile.user.name}
+                    </p>
+                  </div>
+
+                  <p className="text-lg font-bold text-gray-900">
+                    ₹ {r.service.price}
+                  </p>
+                </div>
+
+                {/* ACTIONS */}
+                <div className="flex flex-wrap gap-3 mt-5">
+
+                  {/* CONNECT */}
+                  {r.status === "ACCEPTED" && !r.review && (
                     <button
-                        onClick={() => setReviewRequestId(r.id)}
-                        className="mt-3 bg-yellow-400 px-4 py-2 rounded"
+                      onClick={() =>
+                        navigate(`/entrepreneur/${r.service.profile.id}`)
+                      }
+                      className="bg-green-500 hover:bg-green-400 transition
+                                 text-white px-4 py-2 rounded-lg text-sm"
                     >
-                        Leave Review ⭐
+                      Connect
                     </button>
-                )}
+                  )}
 
+                  {/* REVIEW */}
+                  {r.status === "ACCEPTED" && !r.review && (
+                    <button
+                      onClick={() => setReviewRequestId(r.id)}
+                      className="bg-yellow-400 hover:bg-yellow-300 transition
+                                 text-black px-4 py-2 rounded-lg text-sm"
+                    >
+                      Leave Review ⭐
+                    </button>
+                  )}
+
+                  {/* WITHDRAW */}
+                  {r.status === "PENDING" && (
+                    <button
+                      onClick={() => handleDelete(r.id)}
+                      className="bg-red-500 hover:bg-red-400 transition
+                                 text-white px-4 py-2 rounded-lg text-sm"
+                    >
+                      Withdraw
+                    </button>
+                  )}
+                </div>
+
+                {/* REVIEW MODAL (kept exactly same logic) */}
                 <ReviewModal
-                isOpen={!!reviewRequestId}
-                onClose={() => setReviewRequestId(null)}
-                requestId={reviewRequestId}
-                onSuccess={fetchRequests}   
+                  isOpen={!!reviewRequestId}
+                  onClose={() => setReviewRequestId(null)}
+                  requestId={reviewRequestId}
+                  onSuccess={fetchRequests}
                 />
 
-                {/* WITHDRAW */}
-                {r.status === "PENDING" && (
-                  <button
-                    onClick={() => handleDelete(r.id)}
-                    className="bg-red-500 px-4 py-2 rounded"
-                  >
-                    Withdraw
-                  </button>
-                )}
+              </motion.div>
+            ))}
 
-              </div>
-            </div>
-          ))
+          </div>
         )}
       </div>
 
-      {/* 🔥 REVIEW MODAL */}
+      {/* 🔥 SECOND MODAL (kept untouched) */}
       <ReviewModal
         isOpen={!!selectedRequest}
         onClose={() => setSelectedRequest(null)}

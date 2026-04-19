@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import API from "../api/axios";
 import Navbar from "../components/Navbar";
+import { motion } from "framer-motion";
 
 function CreateService() {
   const navigate = useNavigate();
@@ -28,7 +29,7 @@ function CreateService() {
       await API.post("/services/create", {
         title: form.title,
         description: form.description,
-        price: Number(form.price), // 🔥 MUST BE NUMBER
+        price: Number(form.price),
       });
 
       navigate("/services");
@@ -42,55 +43,89 @@ function CreateService() {
   };
 
   return (
-    <div className="min-h-screen bg-black text-white">
-
+    <div className="min-h-screen bg-[#f9fafb] text-black">
       <Navbar />
 
-      <div className="pt-28 px-10 max-w-md mx-auto">
+      <div className="pt-24 px-4 md:px-10 flex justify-center">
 
-        <h2 className="text-xl mb-4">Create Service</h2>
+        <motion.div
+          initial={{ opacity: 0, y: 30 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="w-full max-w-xl bg-white rounded-2xl shadow-sm border border-gray-100 p-6 md:p-8"
+        >
 
-        <form onSubmit={handleCreate} className="flex flex-col gap-4">
+          {/* HEADER */}
+          <h2 className="text-2xl font-bold mb-6">
+            Create a Service
+          </h2>
 
-          {/* TITLE */}
-          <input
-            placeholder="Service Title"
-            value={form.title}
-            onChange={(e) =>
-              setForm({ ...form, title: e.target.value })
-            }
-            className="px-3 py-2 bg-white/10 border rounded"
-          />
+          <form onSubmit={handleCreate} className="flex flex-col gap-5">
 
-          {/* DESCRIPTION */}
-          <textarea
-            placeholder="Description"
-            value={form.description}
-            onChange={(e) =>
-              setForm({ ...form, description: e.target.value })
-            }
-            className="px-3 py-2 bg-white/10 border rounded"
-          />
+            {/* TITLE */}
+            <div>
+              <label className="text-sm text-gray-600">
+                Service Title *
+              </label>
+              <input
+                placeholder="e.g. I will build your website"
+                value={form.title}
+                onChange={(e) =>
+                  setForm({ ...form, title: e.target.value })
+                }
+                className="w-full mt-1 px-4 py-3 rounded-lg border border-gray-200
+                           focus:outline-none focus:ring-2 focus:ring-amber-200"
+              />
+            </div>
 
-          {/* 🔥 PRICE (IMPORTANT) */}
-          <input
-            type="number"
-            placeholder="Price"
-            value={form.price}
-            onChange={(e) =>
-              setForm({ ...form, price: e.target.value })
-            }
-            className="px-3 py-2 bg-white/10 border rounded"
-          />
+            {/* DESCRIPTION */}
+            <div>
+              <label className="text-sm text-gray-600">
+                Description
+              </label>
+              <textarea
+                placeholder="Describe your service..."
+                value={form.description}
+                onChange={(e) =>
+                  setForm({ ...form, description: e.target.value })
+                }
+                className="w-full mt-1 px-4 py-3 rounded-lg border border-gray-200
+                           focus:outline-none focus:ring-2 focus:ring-amber-200
+                           min-h-[120px]"
+              />
+            </div>
 
-          <button className="bg-amber-200 text-black py-2 rounded">
-            {loading ? "Creating..." : "Create"}
-          </button>
+            {/* PRICE */}
+            <div>
+              <label className="text-sm text-gray-600">
+                Price (₹) *
+              </label>
+              <input
+                type="number"
+                placeholder="e.g. 500"
+                value={form.price}
+                onChange={(e) =>
+                  setForm({ ...form, price: e.target.value })
+                }
+                className="w-full mt-1 px-4 py-3 rounded-lg border border-gray-200
+                           focus:outline-none focus:ring-2 focus:ring-amber-200"
+              />
+            </div>
 
-        </form>
+            {/* BUTTON */}
+            <button
+              disabled={loading}
+              className="bg-amber-200 hover:bg-amber-300 transition
+                         text-black py-3 rounded-lg font-semibold
+                         disabled:opacity-50"
+            >
+              {loading ? "Creating..." : "Create Service"}
+            </button>
+
+          </form>
+
+        </motion.div>
 
       </div>
-
     </div>
   );
 }

@@ -4,6 +4,7 @@ import API from "../api/axios";
 import Navbar from "../components/Navbar";
 import CategorySelect from "../components/CategorySelect";
 import { useAuth } from "../context/AuthContext";
+import { motion } from "framer-motion";
 
 function BecomeSeller() {
   const { user, isSeller } = useAuth();
@@ -25,7 +26,6 @@ function BecomeSeller() {
     avatarUrl: "",
   });
 
-  // 🔥 FETCH CATEGORIES
   const fetchCategories = async () => {
     try {
       const res = await API.get("/categories");
@@ -41,7 +41,6 @@ function BecomeSeller() {
       return;
     }
 
-    // Already seller → redirect
     if (isSeller) {
       navigate("/profile");
       return;
@@ -50,7 +49,6 @@ function BecomeSeller() {
     fetchCategories();
   }, [user, isSeller]);
 
-  // 🔥 SUBMIT
   const handleSubmit = async (e) => {
     e.preventDefault();
 
@@ -75,7 +73,6 @@ function BecomeSeller() {
         ],
       });
 
-      // ✅ Save phone separately (User model)
       await API.patch("/user/profile", {
         phone: form.phone,
       });
@@ -92,93 +89,156 @@ function BecomeSeller() {
   };
 
   return (
-    <div className="min-h-screen bg-black text-white">
+    <div className="min-h-screen bg-[#f9fafb] text-black">
       <Navbar />
 
-      <div className="pt-28 px-6 flex justify-center">
-        <form
-          onSubmit={handleSubmit}
-          className="w-full max-w-lg bg-white/10 p-6 rounded-xl border border-white/20"
+      <div className="pt-24 px-4 md:px-10 flex justify-center">
+
+        <motion.div
+          initial={{ opacity: 0, y: 40 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="w-full max-w-2xl bg-white rounded-2xl shadow-sm border border-gray-100 
+                     p-6 md:p-10"
         >
-          <h2 className="text-2xl mb-6 text-center">
-            Become a Seller 🚀
-          </h2>
 
-          {/* BIO */}
-          <input
-            placeholder="Bio (optional)"
-            onChange={(e) =>
-              setForm({ ...form, bio: e.target.value })
-            }
-            className="w-full mb-3 px-3 py-2 bg-white/10 border rounded"
-          />
-
-          {/* LOCATION */}
-          <input
-            required
-            placeholder="Location *"
-            onChange={(e) =>
-              setForm({ ...form, location: e.target.value })
-            }
-            className="w-full mb-3 px-3 py-2 bg-white/10 border rounded"
-          />
-
-          {/* PHONE */}
-          <input
-            required
-            placeholder="Phone *"
-            onChange={(e) =>
-              setForm({ ...form, phone: e.target.value })
-            }
-            className="w-full mb-3 px-3 py-2 bg-white/10 border rounded"
-          />
-
-          {/* CATEGORIES */}
-          <div className="mb-3">
-            <CategorySelect
-              categories={categories}
-              selected={selectedCategories}
-              setSelected={setSelectedCategories}
-              multiple
-            />
+          {/* HEADER */}
+          <div className="mb-8">
+            <h2 className="text-2xl md:text-3xl font-bold">
+              Become a Seller 🚀
+            </h2>
+            <p className="text-gray-500 text-sm mt-1">
+              Share your expertise and start earning today
+            </p>
           </div>
 
-          {/* EXPERIENCE */}
-          <input
-            placeholder="Sector"
-            onChange={(e) =>
-              setExperience({ ...experience, sector: e.target.value })
-            }
-            className="w-full mb-3 px-3 py-2 bg-white/10 border rounded"
-          />
+          <form onSubmit={handleSubmit} className="flex flex-col gap-6">
 
-          <input
-            type="number"
-            placeholder="Years"
-            onChange={(e) =>
-              setExperience({ ...experience, years: e.target.value })
-            }
-            className="w-full mb-3 px-3 py-2 bg-white/10 border rounded"
-          />
+            {/* BIO */}
+            <div>
+              <label className="text-sm font-medium text-gray-600">
+                Bio
+              </label>
+              <input
+                placeholder="Tell something about yourself..."
+                onChange={(e) =>
+                  setForm({ ...form, bio: e.target.value })
+                }
+                className="w-full mt-2 px-4 py-3 rounded-xl border border-gray-200
+                           focus:outline-none focus:ring-2 focus:ring-amber-300"
+              />
+            </div>
 
-          <textarea
-            placeholder="Experience Description"
-            onChange={(e) =>
-              setExperience({
-                ...experience,
-                description: e.target.value,
-              })
-            }
-            className="w-full mb-4 px-3 py-2 bg-white/10 border rounded"
-          />
+            {/* LOCATION */}
+            <div>
+              <label className="text-sm font-medium text-gray-600">
+                Location *
+              </label>
+              <input
+                required
+                placeholder="e.g. Kolkata"
+                onChange={(e) =>
+                  setForm({ ...form, location: e.target.value })
+                }
+                className="w-full mt-2 px-4 py-3 rounded-xl border border-gray-200
+                           focus:outline-none focus:ring-2 focus:ring-amber-300"
+              />
+            </div>
 
-          <button
-            type="submit"
-            className="w-full bg-amber-200 text-black py-2 rounded font-semibold"
-          >
-            Become Seller
-          </button>
-        </form>
+            {/* PHONE */}
+            <div>
+              <label className="text-sm font-medium text-gray-600">
+                Phone *
+              </label>
+              <input
+                required
+                placeholder="e.g. 9876543210"
+                onChange={(e) =>
+                  setForm({ ...form, phone: e.target.value })
+                }
+                className="w-full mt-2 px-4 py-3 rounded-xl border border-gray-200
+                           focus:outline-none focus:ring-2 focus:ring-amber-300"
+              />
+            </div>
+
+            {/* CATEGORIES */}
+            <div>
+              <label className="text-sm font-medium text-gray-600">
+                Categories *
+              </label>
+              <div className="mt-2">
+                <CategorySelect
+                  categories={categories}
+                  selected={selectedCategories}
+                  setSelected={setSelectedCategories}
+                  multiple
+                />
+              </div>
+            </div>
+
+            {/* EXPERIENCE */}
+            <div className="grid md:grid-cols-2 gap-4">
+              <div>
+                <label className="text-sm font-medium text-gray-600">
+                  Sector
+                </label>
+                <input
+                  placeholder="e.g. Web Development"
+                  onChange={(e) =>
+                    setExperience({ ...experience, sector: e.target.value })
+                  }
+                  className="w-full mt-2 px-4 py-3 rounded-xl border border-gray-200
+                             focus:outline-none focus:ring-2 focus:ring-amber-300"
+                />
+              </div>
+
+              <div>
+                <label className="text-sm font-medium text-gray-600">
+                  Years
+                </label>
+                <input
+                  type="number"
+                  placeholder="e.g. 3"
+                  onChange={(e) =>
+                    setExperience({ ...experience, years: e.target.value })
+                  }
+                  className="w-full mt-2 px-4 py-3 rounded-xl border border-gray-200
+                             focus:outline-none focus:ring-2 focus:ring-amber-300"
+                />
+              </div>
+            </div>
+
+            {/* DESCRIPTION */}
+            <div>
+              <label className="text-sm font-medium text-gray-600">
+                Experience Description
+              </label>
+              <textarea
+                placeholder="Describe your experience..."
+                onChange={(e) =>
+                  setExperience({
+                    ...experience,
+                    description: e.target.value,
+                  })
+                }
+                className="w-full mt-2 px-4 py-3 rounded-xl border border-gray-200
+                           focus:outline-none focus:ring-2 focus:ring-amber-300
+                           min-h-[120px]"
+              />
+            </div>
+
+            {/* BUTTON */}
+            <button
+              type="submit"
+              className="bg-amber-200 hover:bg-amber-300 transition
+                         text-black py-3 rounded-xl font-semibold
+                         shadow-sm hover:shadow-md"
+            >
+              Become Seller
+            </button>
+
+          </form>
+        </motion.div>
+
       </div>
     </div>
   );

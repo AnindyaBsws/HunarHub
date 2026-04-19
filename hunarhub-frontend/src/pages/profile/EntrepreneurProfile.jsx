@@ -1,35 +1,51 @@
 import { useEffect, useState } from "react";
 import API from "../../api/axios";
+import Navbar from "../../components/Navbar";
 
-// ✅ MOVE OUTSIDE (IMPORTANT)
-function Editable({ label, field, value, editingField, setEditingField, tempValue, setTempValue, handleSave }) {
+// ✅ Editable Component
+function Editable({
+  label,
+  field,
+  value,
+  editingField,
+  setEditingField,
+  tempValue,
+  setTempValue,
+  handleSave,
+}) {
   return (
-    <div className="mb-4">
-      <p className="text-gray-400">{label}</p>
+    <div className="mb-6">
+      <p className="text-xs uppercase tracking-wide text-gray-400 mb-1">
+        {label}
+      </p>
 
       {editingField === field ? (
-        <div className="flex gap-2 mt-1">
+        <div className="flex gap-2">
           <input
             value={tempValue}
             onChange={(e) => setTempValue(e.target.value)}
-            className="px-3 py-2 bg-white/10 border rounded w-full"
-            autoFocus // ✅ keeps focus
+            className="flex-1 px-4 py-2 border rounded-lg 
+                       focus:outline-none focus:ring-2 focus:ring-amber-300"
+            autoFocus
           />
           <button
             onClick={() => handleSave(field)}
-            className="bg-green-500 px-3 rounded"
+            className="bg-black text-white px-4 rounded-lg hover:opacity-90"
           >
             Save
           </button>
         </div>
       ) : (
-        <div className="flex justify-between mt-1">
-          <p>{value || "Not set"}</p>
+        <div className="flex justify-between items-center group">
+          <p className="text-gray-800">
+            {value || "Not set"}
+          </p>
           <button
             onClick={() => {
               setEditingField(field);
               setTempValue(value || "");
             }}
+            className="text-sm text-gray-400 group-hover:text-black transition"
           >
             Edit
           </button>
@@ -75,72 +91,117 @@ function EntrepreneurProfile() {
   };
 
   if (!profile) {
-    return <div className="text-white p-10">Loading...</div>;
+    return <div className="p-10">Loading...</div>;
   }
 
   return (
-    <div className="min-h-screen bg-black text-white px-6 py-10">
-      <div className="max-w-2xl bg-white/10 p-6 rounded-xl">
+    <div className="min-h-screen bg-[#f9fafb] text-black">
 
-        {/* ✅ FIXED HEADER */}
-        <h1 className="text-4xl font-heading">{profile.name}</h1>
-        <p className="text-gray-400 mb-6">{profile.email}</p>
+      <Navbar />
 
-        <Editable
-          label="Phone"
-          field="phone"
-          value={profile.phone}
-          editingField={editingField}
-          setEditingField={setEditingField}
-          tempValue={tempValue}
-          setTempValue={setTempValue}
-          handleSave={handleSave}
-        />
+      <div className="pt-24 px-4 md:px-10 max-w-4xl mx-auto">
 
-        <Editable
-          label="Location"
-          field="location"
-          value={profile.location}
-          editingField={editingField}
-          setEditingField={setEditingField}
-          tempValue={tempValue}
-          setTempValue={setTempValue}
-          handleSave={handleSave}
-        />
+        {/* 🔥 PROFILE HEADER */}
+        <div className="flex flex-col md:flex-row md:items-center gap-6 mb-10">
 
-        <Editable
-          label="Bio"
-          field="bio"
-          value={profile.bio}
-          editingField={editingField}
-          setEditingField={setEditingField}
-          tempValue={tempValue}
-          setTempValue={setTempValue}
-          handleSave={handleSave}
-        />
-
-        <div className="mt-4">
-          <p className="text-gray-400">Categories</p>
-          <div className="flex gap-2 mt-2 flex-wrap">
-            {profile.categories.map((c) => (
-              <span key={c.id} className="bg-white/10 px-2 py-1 rounded">
-                {c.name}
-              </span>
-            ))}
+          {/* Avatar */}
+          <div className="w-20 h-20 rounded-full bg-gradient-to-br 
+                          from-amber-200 to-yellow-300 flex items-center 
+                          justify-center text-2xl font-bold shadow">
+            {profile.name.charAt(0)}
           </div>
+
+          {/* Info */}
+          <div>
+            <h1 className="text-3xl md:text-4xl font-bold">
+              {profile.name}
+            </h1>
+            <p className="text-gray-500">{profile.email}</p>
+
+            <div className="flex gap-2 mt-2 flex-wrap">
+              {profile.categories.map((c) => (
+                <span
+                  key={c.id}
+                  className="bg-gray-100 px-3 py-1 rounded-full text-sm"
+                >
+                  {c.name}
+                </span>
+              ))}
+            </div>
+          </div>
+
         </div>
 
-        <div className="mt-4">
-          <p className="text-gray-400">Experience</p>
+        {/* 🔥 PROFILE INFO */}
+        <div className="bg-white p-6 rounded-2xl shadow-sm border mb-6">
+
+          <h2 className="font-semibold text-lg mb-4">
+            Profile Details
+          </h2>
+
+          <Editable
+            label="Phone"
+            field="phone"
+            value={profile.phone}
+            editingField={editingField}
+            setEditingField={setEditingField}
+            tempValue={tempValue}
+            setTempValue={setTempValue}
+            handleSave={handleSave}
+          />
+
+          <Editable
+            label="Location"
+            field="location"
+            value={profile.location}
+            editingField={editingField}
+            setEditingField={setEditingField}
+            tempValue={tempValue}
+            setTempValue={setTempValue}
+            handleSave={handleSave}
+          />
+
+          <Editable
+            label="Bio"
+            field="bio"
+            value={profile.bio}
+            editingField={editingField}
+            setEditingField={setEditingField}
+            tempValue={tempValue}
+            setTempValue={setTempValue}
+            handleSave={handleSave}
+          />
+
+        </div>
+
+        {/* 🔥 EXPERIENCE */}
+        <div className="bg-white p-6 rounded-2xl shadow-sm border">
+
+          <h2 className="font-semibold text-lg mb-4">
+            Experience
+          </h2>
+
           {profile.experiences.length === 0 ? (
-            <p>No experience</p>
+            <p className="text-gray-400">No experience added yet</p>
           ) : (
             profile.experiences.map((exp, i) => (
-              <p key={i}>
-                {exp.sector} — {exp.years} yrs
-              </p>
+              <div
+                key={i}
+                className="border-b last:border-none pb-3 mb-3"
+              >
+                <p className="font-medium">{exp.sector}</p>
+                <p className="text-sm text-gray-500">
+                  {exp.years} years
+                </p>
+                {exp.description && (
+                  <p className="text-sm text-gray-600 mt-1">
+                    {exp.description}
+                  </p>
+                )}
+              </div>
             ))
           )}
+
         </div>
 
       </div>

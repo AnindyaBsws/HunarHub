@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import API from "../api/axios";
 import Navbar from "../components/Navbar";
 import { useNavigate } from "react-router-dom";
+import { motion } from "framer-motion";
 
 function Services() {
   const [services, setServices] = useState([]);
@@ -23,7 +24,6 @@ function Services() {
     fetchServices();
   }, []);
 
-  // DELETE
   const handleDelete = async (id) => {
     try {
       await API.delete(`/services/${id}`);
@@ -33,13 +33,11 @@ function Services() {
     }
   };
 
-  // START EDIT
   const startEdit = (service) => {
     setEditingId(service.id);
     setEditData(service);
   };
 
-  // SAVE EDIT
   const saveEdit = async () => {
     try {
       await API.patch(`/services/${editingId}`, editData);
@@ -51,30 +49,40 @@ function Services() {
   };
 
   return (
-    <div className="min-h-screen bg-black text-white">
-
+    <div className="min-h-screen bg-[#f9fafb] text-black">
       <Navbar />
 
-      <div className="pt-28 px-10">
+      <div className="pt-24 px-4 md:px-10 max-w-7xl mx-auto">
 
-        <div className="flex justify-between items-center mb-6">
-          <h2 className="text-2xl">My Services</h2>
+        {/* HEADER */}
+        <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4 mb-10">
+          <h2 className="text-3xl font-bold">My Services</h2>
 
-          {/* ➕ CREATE BUTTON */}
           <button
             onClick={() => navigate("/services/create")}
-            className="bg-amber-200 text-black px-4 py-2 rounded"
+            className="bg-amber-400 hover:bg-amber-300 transition
+                       text-black px-6 py-2.5 rounded-xl font-medium shadow-md"
           >
             + Create Service
           </button>
         </div>
 
         {services.length === 0 ? (
-          <p>No services yet</p>
+          <div className="text-center mt-20 text-gray-500">
+            No services yet
+          </div>
         ) : (
-          <div className="grid md:grid-cols-3 gap-6">
-            {services.map((s) => (
-              <div key={s.id} className="bg-white/10 p-4 rounded">
+          <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+
+            {services.map((s, i) => (
+              <motion.div
+                key={s.id}
+                initial={{ opacity: 0, y: 30 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: i * 0.05 }}
+                className="bg-white rounded-2xl p-5 shadow-sm border border-gray-100
+                           hover:shadow-lg hover:-translate-y-1 transition-all duration-200"
+              >
 
                 {editingId === s.id ? (
                   <>
@@ -83,7 +91,7 @@ function Services() {
                       onChange={(e) =>
                         setEditData({ ...editData, title: e.target.value })
                       }
-                      className="bg-black border p-1 w-full"
+                      className="w-full px-3 py-2 border rounded-lg mb-2"
                     />
 
                     <input
@@ -91,7 +99,7 @@ function Services() {
                       onChange={(e) =>
                         setEditData({ ...editData, description: e.target.value })
                       }
-                      className="bg-black border p-1 w-full mt-2"
+                      className="w-full px-3 py-2 border rounded-lg mb-2"
                     />
 
                     <input
@@ -100,33 +108,67 @@ function Services() {
                       onChange={(e) =>
                         setEditData({ ...editData, price: e.target.value })
                       }
-                      className="bg-black border p-1 w-full mt-2"
+                      className="w-full px-3 py-2 border rounded-lg"
                     />
 
-                    <button
-                      onClick={saveEdit}
-                      className="mt-2 bg-green-500 px-3 py-1 rounded"
-                    >
-                      Save
-                    </button>
+                    <div className="flex gap-3 mt-4">
+                      <button
+                        onClick={saveEdit}
+                        className="flex-1 bg-green-500 text-white py-2 rounded-lg"
+                      >
+                        Save
+                      </button>
+
+                      <button
+                        onClick={() => setEditingId(null)}
+                        className="flex-1 bg-gray-200 py-2 rounded-lg"
+                      >
+                        Cancel
+                      </button>
+                    </div>
                   </>
                 ) : (
                   <>
-                    <h3 className="text-lg">{s.title}</h3>
-                    <p className="text-gray-400">{s.description}</p>
-                    <p className="text-amber-200 mt-2">₹ {s.price}</p>
+                    {/* TITLE */}
+                    <h3 className="font-semibold text-lg leading-snug line-clamp-2">
+                      {s.title}
+                    </h3>
 
-                    <div className="flex gap-3 mt-3">
+                    {/* DESCRIPTION */}
+                    <p className="text-gray-500 text-sm mt-2 line-clamp-2">
+                      {s.description}
+                    </p>
+
+                    {/* RATING (placeholder) */}
+                    <div className="mt-3 text-sm text-yellow-500">
+                      ⭐ 4.5 <span className="text-gray-400">(12)</span>
+                    </div>
+
+                    {/* PRICE */}
+                    <div className="mt-4 flex justify-between items-center">
+                      <span className="text-gray-400 text-xs">
+                        Starting at
+                      </span>
+
+                      <span className="text-xl font-bold text-gray-900">
+                        ₹ {s.price}
+                      </span>
+                    </div>
+
+                    {/* ACTIONS */}
+                    <div className="flex gap-2 mt-5">
                       <button
                         onClick={() => startEdit(s)}
-                        className="bg-blue-500 px-3 py-1 rounded"
+                        className="flex-1 bg-blue-500 hover:bg-blue-400 transition 
+                                   text-white py-2 rounded-lg text-sm"
                       >
                         Edit
                       </button>
 
                       <button
                         onClick={() => handleDelete(s.id)}
-                        className="bg-red-500 px-3 py-1 rounded"
+                        className="flex-1 bg-red-500 hover:bg-red-400 transition 
+                                   text-white py-2 rounded-lg text-sm"
                       >
                         Delete
                       </button>
@@ -134,13 +176,12 @@ function Services() {
                   </>
                 )}
 
-              </div>
+              </motion.div>
             ))}
+
           </div>
         )}
-
       </div>
-
     </div>
   );
 }

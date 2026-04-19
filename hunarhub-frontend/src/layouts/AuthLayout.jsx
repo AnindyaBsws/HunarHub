@@ -9,19 +9,25 @@ function AuthLayout() {
       {/* LEFT → FLOATING OBJECT */}
       <div className="hidden md:flex w-1/2 items-center justify-center relative">
 
+        {/* ✅ FLOATING (UP-DOWN) */}
         <motion.div
           animate={{ y: [0, -25, 0] }}
           transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
           className="relative flex flex-col items-center"
         >
-          <img
+
+          {/* ✅ ROTATION ONLY ON IMAGE */}
+          <motion.img
             src={heroImage}
-            className="w-[350px] md:w-[500px] object-contain"
+            animate={{ rotate: 360 }}
+            transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
+            className="w-[450px] md:w-[600px] object-contain"
           />
 
-          {/* SHADOW */}
-          <div className="mt-[-15px] w-[180px] h-[60px] 
+          {/* ✅ STATIC SHADOW */}
+          <div className="mt-[-25px] w-[150px] h-[70px] 
                           bg-black/30 blur-2xl rounded-full" />
+
         </motion.div>
 
       </div>
