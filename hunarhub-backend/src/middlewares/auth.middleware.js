@@ -18,9 +18,8 @@ function authMiddleware(req, res, next) {
 
   // 🔥 NO TOKEN → allow as guest
   if (!token) {
-    req.userId = null;
-    return next();
-  }
+        return res.status(401).json({ message: "Unauthorized" });
+    }
 
   try {
     const decoded = jwt.verify(token, process.env.JWT_SECRET);

@@ -1,19 +1,23 @@
 import { useEffect, useState } from "react";
 import API from "../api/axios";
+import { useAuth } from "../context/AuthContext";
 
-export function useNotifications(user) {
+export function useNotifications() {
+  const { user, isSeller } = useAuth();
+
   const [hasNewIncoming, setHasNewIncoming] = useState(false);
   const [hasNewMyRequests, setHasNewMyRequests] = useState(false);
 
   useEffect(() => {
-    if (!user) return;
+    // ✅ Only sellers should poll incoming requests
+    if (!user || !isSeller) return;
 
     let interval;
 
     const checkNotifications = async () => {
       try {
-        // 🔴 INCOMING (SELLER)
         const res = await API.get("/requests/incoming");
+
         const incoming = res.data.requests;
 
         const lastSeen =
@@ -24,24 +28,24 @@ export function useNotifications(user) {
         }
 
       } catch (err) {
-        if (err.response?.status === 401) {
-          clearInterval(interval);
-        }
+        console.error("Notification error:", err);
       }
     };
 
+    // 🔥 run immediately
     checkNotifications();
 
-    interval = setInterval(checkNotifications, 15000);
+    // 🔥 polling
+    interval = setInterval(checkNotifications, 10000);
 
     return () => clearInterval(interval);
-  }, [user?.id]);
+
+  }, [user?.id, isSeller]);
 
   return {
     hasNewIncoming,
     hasNewMyRequests,
 
-    // 🔴 CLEAR WHEN PAGE OPENED
     clearIncoming: (count) => {
       localStorage.setItem("lastSeenIncoming", count);
       setHasNewIncoming(false);

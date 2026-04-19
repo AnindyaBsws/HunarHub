@@ -9,23 +9,22 @@ function Navbar() {
 
   const { user, logout, isSeller } = useAuth();
 
+  // ✅ FIX: no arguments
   const {
     hasNewIncoming,
     hasNewMyRequests,
-  } = useNotifications(user);
+    clearIncoming,
+  } = useNotifications();
 
   const navItems = [
     { name: "Explore", path: "/explore" },
 
-    // guest
     ...(!user ? [{ name: "About", path: "/about" }] : []),
 
-    // logged in (both user + seller)
     ...(user
       ? [
           { name: "Dashboard", path: "/dashboard" },
 
-          // 🔴 seller requests
           ...(isSeller
             ? [{
                 name: "Requests",
@@ -34,7 +33,6 @@ function Navbar() {
               }]
             : []),
 
-          // 🔵 user requests (everyone)
           {
             name: "My Requests",
             path: "/my-requests",
@@ -43,7 +41,7 @@ function Navbar() {
 
           ...(isSeller
             ? [{ name: "My Services", path: "/services" }]
-            : [{ name: "Become Seller", path: "/profile" }]),
+            : [{ name: "Become Seller", path: "/become-seller" }]),
 
           { name: "Profile", path: "/profile" },
         ]
@@ -55,13 +53,21 @@ function Navbar() {
     navigate("/");
   };
 
+  // ✅ OPTIONAL: clear notification when visiting requests page
+  const handleNavClick = (item) => {
+    navigate(item.path);
+
+    if (item.path === "/requests") {
+      clearIncoming(0); // reset notification
+    }
+  };
+
   return (
     <motion.div
       initial={{ opacity: 0, y: -40 }}
       animate={{ opacity: 1, y: 0 }}
       className="absolute top-6 left-0 w-full flex items-center justify-between px-6 md:px-10 z-50"
     >
-
       <h1
         onClick={() => navigate("/")}
         className="text-white text-lg font-heading cursor-pointer"
@@ -79,16 +85,16 @@ function Navbar() {
           return (
             <span
               key={i}
-              onClick={() => navigate(item.path)}
+              onClick={() => handleNavClick(item)}
               className={`relative cursor-pointer ${
                 isActive ? "text-amber-200" : "hover:opacity-70"
               }`}
             >
               {item.name}
 
-              {/* 🔴 DOT */}
+              {/* 🔴 RED DOT */}
               {item.notify && (
-                <span className="absolute -top-1 -right-2 w-2 h-2 bg-red-500 rounded-full" />
+                <span className="absolute -top-1 -right-2 w-2 h-2 bg-red-500 rounded-full animate-pulse" />
               )}
             </span>
           );

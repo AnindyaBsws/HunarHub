@@ -4,7 +4,6 @@ import express from 'express';
 
 //Import controllers
 import { testUser,registerUser,loginUser,refreshTokenController,logoutUser } from '../controllers/user.controller.js';
-import { getProfile, createProfile } from "../controllers/profile.controller.js";
 import { getEntrepreneurs, getEntrepreneurById } from '../controllers/entrepreneur.controller.js';
 
 
@@ -30,8 +29,6 @@ router.post('/logout', logoutUser);
 
 //User Routes
 //Create Profile route with authMiddleware
-router.get('/profile', authMiddleware, getProfile);
-router.post('/profile/create', authMiddleware, createProfile);
 router.get('/entrepreneurs', getEntrepreneurs);
 router.get('/entrepreneurs/:id', authMiddleware, getEntrepreneurById);
 

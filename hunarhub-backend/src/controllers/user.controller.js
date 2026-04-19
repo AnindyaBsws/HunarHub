@@ -4,18 +4,16 @@ import jwt from 'jsonwebtoken';
 
 //Imports
 import prisma from '../config/prisma.js';
-import { verifyToken,generateAccessToken, generateRefreshToken } from '../utils/jwt.js';
-
+import { verifyToken, generateAccessToken, generateRefreshToken } from '../utils/jwt.js';
 
 
 //-------------------Controller Functions----------------
 
 
-
 //-------Auth Controllers----------
 
 //.......Test User Controller Function.........
-function testUser(req,res){
+function testUser(req, res) {
     res.send('Hello, I am Anindya Biswas!!');
 }
 
@@ -24,17 +22,14 @@ async function refreshTokenController(req, res) {
 
     let refreshToken;
 
-    // Try cookies
     if (req.cookies && req.cookies.refreshToken) {
         refreshToken = req.cookies.refreshToken;
     }
 
-    // Fallback to Authorization header
     else if (req.headers.authorization && req.headers.authorization.startsWith('Bearer ')) {
         refreshToken = req.headers.authorization.split(' ')[1];
     }
 
-    // If no token found
     if (!refreshToken) {
         return res.status(401).json({
             message: 'No refresh token provided'
@@ -42,14 +37,11 @@ async function refreshTokenController(req, res) {
     }
 
     try {
-        // Check DB first
         const storedToken = await prisma.refreshToken.findUnique({
             where: { token: refreshToken }
         });
 
-        // Token reuse detection
         if (!storedToken) {
-
             const decoded = verifyToken(refreshToken, process.env.REFRESH_SECRET);
 
             await prisma.refreshToken.deleteMany({
@@ -61,25 +53,26 @@ async function refreshTokenController(req, res) {
             });
         }
 
-        // Verify token
         const decoded = verifyToken(refreshToken, process.env.REFRESH_SECRET);
 
-        // ✅ Fetch user from DB (IMPORTANT FIX)
+        // ✅ IMPORTANT FIX HERE
         const user = await prisma.user.findUnique({
             where: { id: decoded.id },
-            select: {
-                id: true,
-                name: true,
-                email: true
+            include: {
+                entrepreneurProfile: true
             }
         });
 
-        // Generate new access token
         const newAccessToken = generateAccessToken({ id: decoded.id });
 
         return res.json({
             accessToken: newAccessToken,
-            user // ✅ NOW frontend can restore state
+            user: {
+                id: user.id,
+                name: user.name,
+                email: user.email,
+                isSeller: !!user.entrepreneurProfile
+            }
         });
 
     } catch (error) {
@@ -92,43 +85,31 @@ async function refreshTokenController(req, res) {
 
 
 //........Register User Controller Function...........
-async function registerUser(req,res){
-    //....Flow.....
-    //1. req.body
-    //2.Validation
-    //3.Try-Catch block starts
-    //4.Existing Mail Checker
-    //5.Password Hashing
-    //6.Create User table, response and error Handling
+async function registerUser(req, res) {
 
-    const { name,email,password } = req.body;
+    const { name, email, password } = req.body;
 
-    //Validation of Required Fields
-    if(!name || !email || !password){
+    if (!name || !email || !password) {
         return res.status(400).json({
             message: 'All Fields are Required!!'
         });
     }
 
     try {
-        //Email trimming
         const cleanEmail = email.trim().toLowerCase();
 
-        //Existing Email Checker
         const existingUser = await prisma.user.findUnique({
             where: { email: cleanEmail }
         });
-        if(existingUser){
+
+        if (existingUser) {
             return res.status(400).json({
                 message: 'This Email is already registered'
             });
         }
 
-        //Password Hashing 
         const hashedPassword = await bcrypt.hash(password, 10);
 
-
-        //Create Table
         await prisma.user.create({
             data: {
                 name,
@@ -137,13 +118,11 @@ async function registerUser(req,res){
             }
         });
 
-        //Response
         res.status(201).json({
-        message: 'User Created Successfully.'
+            message: 'User Created Successfully.'
         });
 
     } catch (error) {
-        //Error Handling
         console.error(error);
         res.status(500).json({
             message: 'Server Error'
@@ -151,12 +130,13 @@ async function registerUser(req,res){
     }
 }
 
+
 //.........Login User Controller Function.........
-async function loginUser(req,res){
-    const { email,password } = req.body;
+async function loginUser(req, res) {
+    const { email, password } = req.body;
     const cleanEmail = email.trim().toLowerCase();
 
-    if(!email || !password){
+    if (!email || !password) {
         return res.status(400).json({
             message: 'All fields are required'
         });
@@ -164,10 +144,13 @@ async function loginUser(req,res){
 
     try {
         const user = await prisma.user.findUnique({
-            where: { email: cleanEmail }
+            where: { email: cleanEmail },
+            include: {
+                entrepreneurProfile: true
+            }
         });
 
-        if(!user){
+        if (!user) {
             return res.status(400).json({
                 message: 'The user does not exist'
             });
@@ -175,7 +158,7 @@ async function loginUser(req,res){
 
         const isMatch = await bcrypt.compare(password, user.password);
 
-        if(!isMatch){
+        if (!isMatch) {
             return res.status(400).json({
                 message: 'Invalid Credentials.'
             });
@@ -194,24 +177,25 @@ async function loginUser(req,res){
         });
 
         res
-        .cookie("accessToken", accessToken, {
-            httpOnly: true,
-            secure: false,
-            sameSite: "lax"
-        })
-        .cookie("refreshToken", refreshToken, {
-            httpOnly: true,
-            secure: false,
-            sameSite: "lax"
-        });
+            .cookie("accessToken", accessToken, {
+                httpOnly: true,
+                secure: false,
+                sameSite: "lax"
+            })
+            .cookie("refreshToken", refreshToken, {
+                httpOnly: true,
+                secure: false,
+                sameSite: "lax"
+            });
 
-        // ✅ FIX: return user
+        // ✅ IMPORTANT FIX HERE
         return res.status(200).json({
             message: 'Login Successful.',
             user: {
                 id: user.id,
                 name: user.name,
-                email: user.email
+                email: user.email,
+                isSeller: !!user.entrepreneurProfile
             }
         });
 
@@ -226,19 +210,16 @@ async function loginUser(req,res){
 
 //...............Logout User Function Controller...........
 async function logoutUser(req, res) {
+
     let refreshToken;
 
-    //Try body(for tests only)
-    if(req.body && req.body.refreshToken){
+    if (req.body && req.body.refreshToken) {
         refreshToken = req.body.refreshToken;
-
     }
-    //Try cookies (for production)
     else if (req.cookies && req.cookies.refreshToken) {
         refreshToken = req.cookies.refreshToken;
     }
 
-    //If no token(token validation)
     if (!refreshToken) {
         return res.status(400).json({
             message: 'Refresh token required'
@@ -246,7 +227,6 @@ async function logoutUser(req, res) {
     }
 
     try {
-        // Delete token from DB
         const deleted = await prisma.refreshToken.deleteMany({
             where: { token: refreshToken }
         });
@@ -257,7 +237,6 @@ async function logoutUser(req, res) {
             });
         }
 
-        //clear the cookies, so that the cookies doesnt caryy the tokens by any chance
         res.clearCookie("accessToken");
         res.clearCookie("refreshToken");
 
@@ -273,4 +252,4 @@ async function logoutUser(req, res) {
     }
 }
 
-export { testUser,registerUser,loginUser,refreshTokenController,logoutUser };
+export { testUser, registerUser, loginUser, refreshTokenController, logoutUser };

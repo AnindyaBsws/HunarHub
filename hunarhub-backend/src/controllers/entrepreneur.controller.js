@@ -155,7 +155,7 @@ async function getEntrepreneurById(req, res) {
     if (hasAccess) {
       return res.json({
         ...baseData,
-        phone: profile.phone,
+        phone: profile.user.phone,
         email: profile.user.email
       });
     }

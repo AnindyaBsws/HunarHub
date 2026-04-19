@@ -3,14 +3,16 @@ import cors from "cors";
 import cookieParser from "cookie-parser";
 
 import userRoutes from './src/routes/user.routes.js';
+import userProfileRoutes from './src/routes/userProfile.routes.js'; // ✅ NEW
+import entrepreneurProfileRoutes from './src/routes/entrepreneurProfile.routes.js'; // ✅ NEW
+
 import serviceRoutes from './src/routes/service.routes.js';
 import requestRoutes from './src/routes/request.routes.js';
 import reviewRoutes from './src/routes/review.routes.js';
 import categoryRoutes from "./src/routes/category.routes.js";
+
 import { startCleanupJob } from "./src/utils/cleanupRequests.js";
 
-
-// FIRST create app
 const app = express();
 
 // middleware
@@ -19,14 +21,21 @@ app.use(cors({
   credentials: true
 }));
 
-// app.options("*", cors());
-
 app.use(express.json());
 app.use(cookieParser());
+
 startCleanupJob();
 
-//routes
+// ---------------- ROUTES ----------------
+
+// Auth + general user
 app.use('/api/users', userRoutes);
+
+//PROFILE ROUTES
+app.use('/api/user', userProfileRoutes);
+app.use('/api/entrepreneur', entrepreneurProfileRoutes);
+
+// Existing
 app.use('/api/services', serviceRoutes);
 app.use('/api/requests', requestRoutes);
 app.use('/api/reviews', reviewRoutes);

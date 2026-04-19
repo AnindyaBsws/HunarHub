@@ -7,8 +7,10 @@ function RequestModal({ isOpen, onClose, serviceId }) {
   const [loading, setLoading] = useState(false);
 
   const sendRequest = async () => {
-    if (!message.trim()) {
-      alert("Message is required");
+    const trimmedMessage = message.trim();
+
+    if (!trimmedMessage || trimmedMessage.length < 2) {
+      alert("Please enter a valid message");
       return;
     }
 
@@ -17,15 +19,19 @@ function RequestModal({ isOpen, onClose, serviceId }) {
 
       await API.post("/requests/create", {
         serviceId,
-        message,
+        message: trimmedMessage, // ✅ FIX
       });
 
       alert("Request sent successfully!");
       setMessage("");
       onClose();
+
     } catch (err) {
       console.error(err);
-      alert("Error sending request");
+
+      alert(
+        err.response?.data?.message || "Error sending request"
+      );
     } finally {
       setLoading(false);
     }
