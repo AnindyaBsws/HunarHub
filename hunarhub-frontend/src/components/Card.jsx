@@ -7,18 +7,27 @@ function Card({ data }) {
   return (
     <motion.div
       onClick={() => navigate(`/entrepreneur/${data.id}`)}
-      whileHover={{ scale: 1.03 }}
-      className="cursor-pointer bg-white/10 backdrop-blur-lg border border-white/20 
-                 rounded-xl p-5 text-white shadow-lg"
+      whileHover={{ y: -6, scale: 1.02 }}
+      whileTap={{ scale: 0.98 }}
+      transition={{ duration: 0.2 }}
+      className="cursor-pointer 
+                 bg-white/70 backdrop-blur-md 
+                 border border-gray-200 
+                 rounded-2xl p-5 
+                 shadow-sm hover:shadow-xl 
+                 transition-all duration-200"
     >
+
       {/* NAME / TITLE */}
-      <h2 className="text-xl font-heading">
+      <h2 className="text-lg font-semibold text-black tracking-tight">
         {data.name || data.title}
       </h2>
 
       {/* LOCATION */}
       {data.location && (
-        <p className="text-gray-300 mt-1">{data.location}</p>
+        <p className="text-gray-500 mt-1 text-sm">
+          {data.location}
+        </p>
       )}
 
       {/* CATEGORIES */}
@@ -27,7 +36,9 @@ function Card({ data }) {
           {data.categories.map((c, i) => (
             <span
               key={i}
-              className="text-xs bg-white/10 px-2 py-1 rounded"
+              className="text-xs bg-gray-100 text-gray-700 
+                         px-2.5 py-1 rounded-full 
+                         hover:bg-gray-200 transition"
             >
               {c}
             </span>
@@ -35,30 +46,37 @@ function Card({ data }) {
         </div>
       )}
 
-      {/* EXPERIENCE (only for entrepreneur cards) */}
+      {/* EXPERIENCE */}
       {data.experience && (
-        <p className="mt-3 text-sm text-gray-400">
+        <p className="mt-3 text-sm text-gray-500">
           Experience: {data.experience}
         </p>
       )}
 
-      {/* PRICE (only for services) */}
+      {/* PRICE */}
       {data.price && (
-        <p className="mt-3 text-amber-200">
+        <p className="mt-3 text-black font-medium">
           ₹ {data.price}
         </p>
       )}
 
       {/* ⭐ RATING */}
       {data.rating ? (
-        <p className="text-yellow-400 mt-2">
-          ⭐ {data.rating} ({data.totalReviews})
-        </p>
+        <div className="flex items-center gap-2 mt-3">
+          <span className="text-yellow-500">★</span>
+          <span className="text-sm text-gray-700">
+            {data.rating}
+          </span>
+          <span className="text-xs text-gray-400">
+            ({data.totalReviews})
+          </span>
+        </div>
       ) : (
-        <p className="text-gray-400 mt-2 text-sm">
+        <p className="text-gray-400 mt-3 text-sm">
           No ratings
         </p>
       )}
+
     </motion.div>
   );
 }

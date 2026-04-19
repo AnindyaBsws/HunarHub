@@ -36,64 +36,86 @@ function Register() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-black text-white px-6">
+    <motion.div
+      initial={{ x: 100, opacity: 0 }}
+      animate={{ x: 0, opacity: 1 }}
+      transition={{ duration: 0.3 }}
+      className="w-full max-w-md 
+                 bg-white/70 backdrop-blur-md 
+                 border border-gray-200 
+                 rounded-2xl p-8 shadow-lg"
+    >
 
-      <motion.div
-        initial={{ opacity: 0, y: 40 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="w-full max-w-md bg-white/10 backdrop-blur-xl 
-                   border border-white/20 rounded-2xl p-8"
-      >
+      <h2 className="text-2xl font-semibold text-center text-black mb-6">
+        Create Account
+      </h2>
 
-        <h2 className="text-3xl font-heading mb-6 text-center">
-          Create Account
-        </h2>
+      {error && (
+        <p className="text-red-500 text-sm mb-4 text-center">
+          {error}
+        </p>
+      )}
 
-        {error && <p className="text-red-400 text-sm mb-4 text-center">{error}</p>}
+      <form onSubmit={handleSubmit} className="flex flex-col gap-4">
 
-        <form onSubmit={handleSubmit} className="flex flex-col gap-4">
+        <input
+          name="name"
+          placeholder="Name"
+          value={form.name}
+          onChange={handleChange}
+          required
+          className="px-4 py-3 rounded-lg 
+                     bg-white border border-gray-200 
+                     text-black placeholder-gray-400 
+                     focus:outline-none focus:ring-2 focus:ring-black/10"
+        />
 
-          <input
-            name="name"
-            placeholder="Name"
-            value={form.name}
-            onChange={handleChange}
-            required
-            className="px-4 py-3 rounded bg-white/10 border border-white/20"
-          />
+        <input
+          name="email"
+          placeholder="Email"
+          value={form.email}
+          onChange={handleChange}
+          required
+          className="px-4 py-3 rounded-lg 
+                     bg-white border border-gray-200 
+                     text-black placeholder-gray-400 
+                     focus:outline-none focus:ring-2 focus:ring-black/10"
+        />
 
-          <input
-            name="email"
-            placeholder="Email"
-            value={form.email}
-            onChange={handleChange}
-            required
-            className="px-4 py-3 rounded bg-white/10 border border-white/20"
-          />
+        <input
+          type="password"
+          name="password"
+          placeholder="Password"
+          value={form.password}
+          onChange={handleChange}
+          required
+          className="px-4 py-3 rounded-lg 
+                     bg-white border border-gray-200 
+                     text-black placeholder-gray-400 
+                     focus:outline-none focus:ring-2 focus:ring-black/10"
+        />
 
-          <input
-            type="password"
-            name="password"
-            placeholder="Password"
-            value={form.password}
-            onChange={handleChange}
-            required
-            className="px-4 py-3 rounded bg-white/10 border border-white/20"
-          />
+        <motion.button
+          whileHover={{ scale: 1.04 }}
+          whileTap={{ scale: 0.96 }}
+          className="mt-2 bg-black text-white py-3 rounded-full font-medium"
+        >
+          {loading ? "Creating..." : "Register"}
+        </motion.button>
 
-          <motion.button
-            whileHover={{ scale: 1.03 }}
-            whileTap={{ scale: 0.97 }}
-            className="bg-amber-200 text-black py-3 rounded font-medium"
-          >
-            {loading ? "Creating..." : "Register"}
-          </motion.button>
+      </form>
 
-        </form>
+      <p className="text-sm text-gray-500 text-center mt-6">
+        Already have an account?{" "}
+        <span
+          onClick={() => navigate("/login")}
+          className="text-black cursor-pointer hover:underline"
+        >
+          Login
+        </span>
+      </p>
 
-      </motion.div>
-
-    </div>
+    </motion.div>
   );
 }
 

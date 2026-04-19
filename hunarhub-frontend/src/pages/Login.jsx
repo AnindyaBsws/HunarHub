@@ -5,8 +5,6 @@ import { useAuth } from "../context/AuthContext";
 
 function Login() {
   const navigate = useNavigate();
-
-  // ✅ FIX: use login (not setUser)
   const { login } = useAuth();
 
   const [form, setForm] = useState({
@@ -30,88 +28,86 @@ function Login() {
     setLoading(true);
 
     try {
-      // ✅ ONLY THIS
       await login(form);
-      alert("Login successful");
-      // redirect
       navigate("/explore");
-
     } catch (err) {
-      setError(
-        err.response?.data?.message || "Login failed"
-      );
+      setError(err.response?.data?.message || "Login failed");
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-black text-white px-6">
+    <motion.div
+      initial={{ x: 100, opacity: 0 }}
+      animate={{ x: 0, opacity: 1 }}
+      transition={{ duration: 0.3 }}
+      className="w-full max-w-md 
+                 bg-white/70 backdrop-blur-md 
+                 border border-gray-200 
+                 rounded-2xl p-8 shadow-lg"
+    >
 
-      <motion.div
-        initial={{ opacity: 0, y: 40 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="w-full max-w-md bg-white/10 backdrop-blur-xl 
-                   border border-white/20 rounded-2xl p-8"
-      >
+      <h2 className="text-2xl font-semibold text-center text-black mb-6">
+        Welcome Back
+      </h2>
 
-        <h2 className="text-3xl font-heading mb-6 text-center">
-          Welcome Back
-        </h2>
-
-        {error && (
-          <p className="text-red-400 text-sm mb-4 text-center">
-            {error}
-          </p>
-        )}
-
-        <form onSubmit={handleSubmit} className="flex flex-col gap-4">
-
-          <input
-            type="email"
-            name="email"
-            placeholder="Email"
-            value={form.email}
-            onChange={handleChange}
-            required
-            className="px-4 py-3 rounded bg-white/10 border border-white/20 focus:outline-none"
-          />
-
-          <input
-            type="password"
-            name="password"
-            placeholder="Password"
-            value={form.password}
-            onChange={handleChange}
-            required
-            className="px-4 py-3 rounded bg-white/10 border border-white/20 focus:outline-none"
-          />
-
-          <motion.button
-            whileHover={{ scale: 1.03 }}
-            whileTap={{ scale: 0.97 }}
-            type="submit"
-            disabled={loading}
-            className="bg-amber-200 text-black py-3 rounded font-medium mt-2"
-          >
-            {loading ? "Logging in..." : "Login"}
-          </motion.button>
-
-        </form>
-
-        <p className="text-sm text-gray-400 mt-6 text-center">
-          Don’t have an account?{" "}
-          <span
-            onClick={() => navigate("/register")}
-            className="text-white cursor-pointer hover:underline"
-          >
-            Register
-          </span>
+      {error && (
+        <p className="text-red-500 text-sm mb-4 text-center">
+          {error}
         </p>
+      )}
 
-      </motion.div>
+      <form onSubmit={handleSubmit} className="flex flex-col gap-4">
 
-    </div>
+        <input
+          type="email"
+          name="email"
+          placeholder="Email"
+          value={form.email}
+          onChange={handleChange}
+          required
+          className="px-4 py-3 rounded-lg 
+                     bg-white border border-gray-200 
+                     text-black placeholder-gray-400 
+                     focus:outline-none focus:ring-2 focus:ring-black/10"
+        />
+
+        <input
+          type="password"
+          name="password"
+          placeholder="Password"
+          value={form.password}
+          onChange={handleChange}
+          required
+          className="px-4 py-3 rounded-lg 
+                     bg-white border border-gray-200 
+                     text-black placeholder-gray-400 
+                     focus:outline-none focus:ring-2 focus:ring-black/10"
+        />
+
+        <motion.button
+          whileHover={{ scale: 1.04 }}
+          whileTap={{ scale: 0.96 }}
+          disabled={loading}
+          className="mt-2 bg-black text-white py-3 rounded-full font-medium"
+        >
+          {loading ? "Logging in..." : "Login"}
+        </motion.button>
+
+      </form>
+
+      <p className="text-sm text-gray-500 text-center mt-6">
+        Don’t have an account?{" "}
+        <span
+          onClick={() => navigate("/register")}
+          className="text-black cursor-pointer hover:underline"
+        >
+          Register
+        </span>
+      </p>
+
+    </motion.div>
   );
 }
 

@@ -1,5 +1,7 @@
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 
+import AuthLayout from "./layouts/AuthLayout";
+
 // Pages
 import Home from "./pages/Home";
 import Explore from "./pages/Explore";
@@ -33,8 +35,10 @@ function App() {
         <Route path="/about" element={<About />} />
 
         {/* Auth */}
-        <Route path="/login" element={<Login />} />
-        <Route path="/register" element={<Register />} />
+        <Route element={<AuthLayout />}>
+          <Route path="/login" element={<Login />} />
+          <Route path="/register" element={<Register />} />
+        </Route>
 
         {/* User */}
         <Route path="/dashboard" element={<Dashboard />} />

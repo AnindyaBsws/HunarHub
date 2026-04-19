@@ -1,4 +1,4 @@
-import { motion } from "framer-motion";
+import { motion, useMotionValue, useTransform } from "framer-motion";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import { useNotifications } from "../hooks/useNotifications";
@@ -9,12 +9,18 @@ function Navbar() {
 
   const { user, logout, isSeller } = useAuth();
 
-  // ✅ FIX: no arguments
   const {
     hasNewIncoming,
     hasNewMyRequests,
     clearIncoming,
   } = useNotifications();
+
+  // 🔥 cursor tracking for glow
+  const mouseX = useMotionValue(0);
+  const mouseY = useMotionValue(0);
+
+  const glowX = useTransform(mouseX, [0, window.innerWidth], ["0%", "100%"]);
+  const glowY = useTransform(mouseY, [0, window.innerHeight], ["0%", "100%"]);
 
   const navItems = [
     { name: "Explore", path: "/explore" },
@@ -53,77 +59,108 @@ function Navbar() {
     navigate("/");
   };
 
-  // ✅ OPTIONAL: clear notification when visiting requests page
   const handleNavClick = (item) => {
     navigate(item.path);
-
     if (item.path === "/requests") {
-      clearIncoming(0); // reset notification
+      clearIncoming(0);
     }
+  };
+
+  const handleMouseMove = (e) => {
+    mouseX.set(e.clientX);
+    mouseY.set(e.clientY);
   };
 
   return (
     <motion.div
-      initial={{ opacity: 0, y: -40 }}
+      onMouseMove={handleMouseMove}
+      initial={{ opacity: 0, y: -30 }}
       animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.3 }}
       className="absolute top-6 left-0 w-full flex items-center justify-between px-6 md:px-10 z-50"
     >
-      <h1
+
+      {/* LOGO */}
+      <motion.h1
+        whileHover={{ scale: 1.05 }}
         onClick={() => navigate("/")}
-        className="text-white text-lg font-heading cursor-pointer"
-      >
-        HunarHub
-      </h1>
+        className="text-black text-[25px] text-lg font-semibold tracking-tight cursor-pointer"
+        >
+        Hunar<span className="text-gray-400">Hub</span>
+        </motion.h1>
 
-      <div className="hidden md:flex bg-white/10 backdrop-blur-xl 
-        px-6 py-2 rounded-full border border-white/20 
-        gap-6 text-sm text-white">
+      {/* NAV ITEMS */}
+      <div className="relative hidden md:flex px-4 py-1.5 rounded-full border border-gray-200 shadow-xl overflow-hidden">
 
-        {navItems.map((item, i) => {
-          const isActive = location.pathname === item.path;
+        {/* 🔥 Glow layer */}
+        <motion.div
+          style={{
+            background: `radial-gradient(circle at ${glowX} ${glowY}, rgba(255,255,255,0.8), transparent 60%)`,
+          }}
+          className="absolute inset-0 pointer-events-none opacity-60"
+        />
 
-          return (
-            <span
-              key={i}
-              onClick={() => handleNavClick(item)}
-              className={`relative cursor-pointer ${
-                isActive ? "text-amber-200" : "hover:opacity-70"
-              }`}
-            >
-              {item.name}
+        <div className="relative flex gap-4 text-[13px] text-gray-600 backdrop-blur-md bg-white/70 rounded-full px-6 py-2">
 
-              {/* 🔴 RED DOT */}
-              {item.notify && (
-                <span className="absolute -top-1 -right-2 w-2 h-2 bg-red-500 rounded-full animate-pulse" />
-              )}
-            </span>
-          );
-        })}
+          {navItems.map((item, i) => {
+            const isActive = location.pathname === item.path;
+
+            return (
+              <motion.span
+                key={i}
+                onClick={() => handleNavClick(item)}
+                whileHover={{ y: -2 }}
+                className={`relative cursor-pointer transition ${
+                  isActive
+                    ? "text-black font-medium"
+                    : "hover:text-black"
+                }`}
+              >
+                {item.name}
+
+                {/* 🔴 NOTIFICATION DOT */}
+                {item.notify && (
+                  <span className="absolute -top-1 -right-2 w-2 h-2 bg-red-500 rounded-full animate-pulse" />
+                )}
+              </motion.span>
+            );
+          })}
+        </div>
       </div>
 
-      <div className="flex gap-4">
+      {/* BUTTONS */}
+      <div className="flex gap-3">
         {!user ? (
           <>
-            <button onClick={() => navigate("/login")} className="text-white">
+            <motion.button
+              whileHover={{ y: -1 }}
+              className="cursor-pointer gap-4 text-[15px] text-gray-700 hover:text-black transition"
+              onClick={() => navigate("/login")}
+            >
               Login
-            </button>
+            </motion.button>
 
-            <button
+            <motion.button
               onClick={() => navigate("/register")}
-              className="bg-amber-200 text-black px-4 py-2 rounded-full"
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              className="cursor-pointer gap-4 text-[15px] bg-gray-100 text-black px-4 py-2 rounded-full shadow-md"
             >
               Register
-            </button>
+            </motion.button>
           </>
         ) : (
-          <button
+          <motion.button
             onClick={handleLogout}
-            className="bg-red-500 text-white px-4 py-2 rounded-full"
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+            className="bg-black text-white px-4 py-2 rounded-full shadow-md"
           >
             Logout
-          </button>
+          </motion.button>
         )}
       </div>
+
     </motion.div>
   );
 }
