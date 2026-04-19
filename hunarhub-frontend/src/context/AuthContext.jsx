@@ -8,9 +8,17 @@ export function AuthProvider({ children }) {
   const [isSeller, setIsSeller] = useState(false);
   const [loading, setLoading] = useState(true);
 
-  // ✅ INITIAL LOAD (FROM REFRESH TOKEN)
+  // ✅ INITIAL LOAD (CONDITIONAL REFRESH)
   useEffect(() => {
     const init = async () => {
+      const hasLoggedIn = localStorage.getItem("hasLoggedIn");
+
+      // ❌ If user never logged in → skip refresh call
+      if (!hasLoggedIn) {
+        setLoading(false);
+        return;
+      }
+
       try {
         const res = await API.post("/users/refresh");
 
@@ -18,7 +26,6 @@ export function AuthProvider({ children }) {
 
         setUser(userData);
         setIsSeller(userData?.isSeller || false);
-
       } catch {
         setUser(null);
         setIsSeller(false);
@@ -38,6 +45,9 @@ export function AuthProvider({ children }) {
 
     setUser(userData);
     setIsSeller(userData.isSeller);
+
+    // ✅ mark that user has logged in
+    localStorage.setItem("hasLoggedIn", "true");
   };
 
   // ✅ REGISTER
@@ -50,6 +60,9 @@ export function AuthProvider({ children }) {
     await API.post("/users/logout");
     setUser(null);
     setIsSeller(false);
+
+    // ✅ remove login flag
+    localStorage.removeItem("hasLoggedIn");
   };
 
   return (

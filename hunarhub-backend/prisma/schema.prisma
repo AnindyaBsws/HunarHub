@@ -25,7 +25,6 @@ model User {
   serviceRequests ServiceRequest[]
   reviews Review[]
 
-  // Relation (one user → many refresh tokens)
   refreshTokens RefreshToken[]
 }
 
@@ -36,8 +35,6 @@ model RefreshToken {
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   createdAt DateTime @default(now())
 }
-
-
 
 model EntrepreneurProfile {
   id        Int      @id @default(autoincrement())
@@ -56,13 +53,11 @@ model EntrepreneurProfile {
   updatedAt DateTime @updatedAt
 
   experiences Experience[]
-  categories  Category[] 
+  categories  Category[]
   services    Service[]
 
   @@index([location])
 }
-
-
 
 model Experience {
   id          Int      @id @default(autoincrement())
@@ -70,7 +65,12 @@ model Experience {
   profileId   Int
   profile     EntrepreneurProfile @relation(fields: [profileId], references: [id], onDelete: Cascade)
 
-  sector      String
+  // ✅ NEW: link each experience to a category (skill)
+  categoryId  Int
+  category    Category @relation(fields: [categoryId], references: [id])
+
+  // ✅ UPDATED: optional sector
+  sector      String?
   years       Int
   isCurrent   Boolean
   description String?
@@ -79,7 +79,6 @@ model Experience {
 
   @@index([profileId])
 }
-
 
 model Category {
   id          Int      @id @default(autoincrement())
@@ -92,10 +91,11 @@ model Category {
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
-  // Relations
   entrepreneurs EntrepreneurProfile[]
-}
 
+  // ✅ NEW: reverse relation
+  experiences   Experience[]
+}
 
 model Service {
   id          Int      @id @default(autoincrement())
@@ -112,9 +112,6 @@ model Service {
 
   createdAt   DateTime @default(now())
 }
-
-
-
 
 enum RequestStatus {
   PENDING
@@ -143,7 +140,6 @@ model ServiceRequest {
 
   @@index([serviceId])
 }
-
 
 model Review {
   id        Int      @id @default(autoincrement())
