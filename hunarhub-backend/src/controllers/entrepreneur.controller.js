@@ -4,25 +4,22 @@ async function getEntrepreneurs(req, res) {
     try {
         const { category, location, page, limit, sort } = req.query;
 
-        // Pagination
         const pageNumber = parseInt(page) || 1;
-        const limitNumber = parseInt(limit) || 5;
+        const limitNumber = parseInt(limit) || 6;
         const skip = (pageNumber - 1) * limitNumber;
 
-        // DYNAMIC FILTER
+        // ✅ FILTER
         const filter = {
             isAvailable: true,
 
-            // (optional + ID based)
             ...(category && {
-                categories: {
+                experiences: {
                     some: {
-                        id: Number(category)
+                        categoryId: Number(category)
                     }
                 }
             }),
 
-            // LOCATION FIX
             ...(location && location.trim() !== "" && {
                 location: {
                     contains: location,
@@ -31,13 +28,12 @@ async function getEntrepreneurs(req, res) {
             })
         };
 
-        // Sorting
         let orderBy = {};
         if (sort === "newest") {
             orderBy = { createdAt: "desc" };
         }
 
-        // Fetch data
+        // ✅ FETCH
         const entrepreneurs = await prisma.entrepreneurProfile.findMany({
             where: filter,
             skip,
@@ -48,42 +44,41 @@ async function getEntrepreneurs(req, res) {
                 user: {
                     select: { name: true }
                 },
-                categories: {
-                    select: { name: true }
-                },
                 experiences: {
-                    select: {
-                        sector: true,
-                        years: true,
-                        isCurrent: true
+                    include: {
+                        category: {
+                            select: { name: true }
+                        }
                     }
                 }
             }
         });
 
-        // Count
         const total = await prisma.entrepreneurProfile.count({
             where: filter
         });
 
-        // Format
-        const formatted = entrepreneurs.map(e => ({
+        // ✅ FORMAT (IMPORTANT FIX)
+        let formatted = entrepreneurs.map(e => ({
             id: e.id,
             name: e.user.name,
             bio: e.bio,
             location: e.location,
-            categories: e.categories.map(c => c.name),
-            experience: e.experiences.length
-                ? `${Math.max(...e.experiences.map(exp => exp.years))} years`
-                : "No experience"
+
+            skills: e.experiences.map(exp => ({
+                name: exp.category?.name || "Unknown",
+                years: exp.years
+            })),
+
+            rating: "No ratings" // placeholder
         }));
 
-        // Sort by experience (frontend-level)
+        // ✅ SORT BY EXPERIENCE (MAX)
         if (sort === "experience") {
             formatted.sort((a, b) => {
-                const expA = parseInt(a.experience) || 0;
-                const expB = parseInt(b.experience) || 0;
-                return expB - expA;
+                const maxA = Math.max(...a.skills.map(s => s.years), 0);
+                const maxB = Math.max(...b.skills.map(s => s.years), 0);
+                return maxB - maxA;
             });
         }
 
@@ -103,17 +98,21 @@ async function getEntrepreneurs(req, res) {
 }
 
 
+// ---------------- GET SINGLE ----------------
 async function getEntrepreneurById(req, res) {
   try {
     const { id } = req.params;
-    const userId = req.userId; // may be undefined if not logged in
+    const userId = req.userId;
 
     const profile = await prisma.entrepreneurProfile.findUnique({
       where: { id: Number(id) },
       include: {
         user: true,
-        categories: { select: { name: true } },
-        experiences: true
+        experiences: {
+          include: {
+            category: true
+          }
+        }
       }
     });
 
@@ -121,7 +120,6 @@ async function getEntrepreneurById(req, res) {
       return res.status(404).json({ message: "Entrepreneur not found" });
     }
 
-    // 🔐 CHECK: does user have accepted request?
     let hasAccess = false;
 
     if (userId) {
@@ -138,20 +136,20 @@ async function getEntrepreneurById(req, res) {
       if (accepted) hasAccess = true;
     }
 
-    // 🔥 BASE DATA (visible to everyone)
     const baseData = {
       id: profile.id,
       name: profile.user.name,
       location: profile.location,
       bio: profile.bio,
-      categories: profile.categories.map(c => c.name),
-      experience: profile.experiences.length
-        ? `${Math.max(...profile.experiences.map(e => e.years))} years`
-        : "No experience",
+
+      skills: profile.experiences.map(exp => ({
+        name: exp.category?.name,
+        years: exp.years
+      })),
+
       hasAccess
     };
 
-    // 🔐 FULL DATA (only if accepted)
     if (hasAccess) {
       return res.json({
         ...baseData,

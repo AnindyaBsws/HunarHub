@@ -8,6 +8,23 @@ export function AuthProvider({ children }) {
   const [isSeller, setIsSeller] = useState(false);
   const [loading, setLoading] = useState(true);
 
+  // 🔥 SAFE SELLER CHECK (NO CONSOLE ERROR)
+  const checkSellerStatus = async () => {
+    try {
+      const res = await API.get("/entrepreneur/profile").catch(() => null);
+
+      if (res && res.status === 200) {
+        setIsSeller(true);
+      } else {
+        setIsSeller(false);
+      }
+    } catch (err) {
+      // fallback safety (should not trigger)
+      console.error("Seller check error:", err);
+      setIsSeller(false);
+    }
+  };
+
   // ✅ INITIAL LOAD
   useEffect(() => {
     const init = async () => {
@@ -24,19 +41,15 @@ export function AuthProvider({ children }) {
 
         setUser(userData);
 
-        // 🔥 CHECK SELLER STATUS FROM BACKEND
-        try {
-          await API.get("/entrepreneur/profile");
-          setIsSeller(true);
-        } catch {
-          setIsSeller(false);
-        }
+        // 🔥 CHECK SELLER STATUS
+        await checkSellerStatus();
 
-      } catch {
+      } catch (err) {
+        console.error("Refresh failed:", err);
         setUser(null);
         setIsSeller(false);
       } finally {
-        setLoading(false); // ✅ IMPORTANT FIX
+        setLoading(false);
       }
     };
 
@@ -50,13 +63,8 @@ export function AuthProvider({ children }) {
 
     setUser(userData);
 
-    // 🔥 VERIFY SELLER AFTER LOGIN
-    try {
-      await API.get("/entrepreneur/profile");
-      setIsSeller(true);
-    } catch {
-      setIsSeller(false);
-    }
+    // 🔥 CHECK SELLER AFTER LOGIN
+    await checkSellerStatus();
 
     localStorage.setItem("hasLoggedIn", "true");
   };
@@ -68,7 +76,12 @@ export function AuthProvider({ children }) {
 
   // ✅ LOGOUT
   const logout = async () => {
-    await API.post("/users/logout");
+    try {
+      await API.post("/users/logout");
+    } catch (err) {
+      console.error("Logout error:", err);
+    }
+
     setUser(null);
     setIsSeller(false);
     localStorage.removeItem("hasLoggedIn");

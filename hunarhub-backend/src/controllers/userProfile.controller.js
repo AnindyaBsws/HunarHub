@@ -1,5 +1,4 @@
-import prisma from "../config/prisma.js";
-
+import prisma from '../config/prisma.js';
 
 // ------------------ GET USER PROFILE ------------------
 async function getUserProfile(req, res) {
@@ -12,12 +11,14 @@ async function getUserProfile(req, res) {
       });
     }
 
+    // ✅ ONLY USER TABLE
     const user = await prisma.user.findUnique({
       where: { id: userId },
       select: {
         id: true,
         name: true,
         email: true,
+        phone: true, // ✅ FIXED (from user table)
       },
     });
 
@@ -27,17 +28,7 @@ async function getUserProfile(req, res) {
       });
     }
 
-    const profile = await prisma.entrepreneurProfile.findUnique({
-      where: { userId },
-      select: { phone: true },
-    });
-
-    return res.status(200).json({
-      id: user.id,
-      name: user.name,
-      email: user.email,
-      phone: profile?.phone || "",
-    });
+    return res.status(200).json(user);
 
   } catch (error) {
     console.error(error);
@@ -66,26 +57,11 @@ async function updateUserProfile(req, res) {
       });
     }
 
-    const existingProfile = await prisma.entrepreneurProfile.findUnique({
-      where: { userId },
+    // ✅ UPDATE USER TABLE ONLY
+    const updated = await prisma.user.update({
+      where: { id: userId },
+      data: { phone },
     });
-
-    let updated;
-
-    if (existingProfile) {
-      updated = await prisma.entrepreneurProfile.update({
-        where: { userId },
-        data: { phone },
-      });
-    } else {
-      updated = await prisma.entrepreneurProfile.create({
-        data: {
-          userId,
-          phone,
-          location: "Not set",
-        },
-      });
-    }
 
     return res.status(200).json({
       message: "Phone updated successfully",
@@ -129,12 +105,11 @@ async function deleteUserProfile(req, res) {
       });
     }
 
-    // 🔥 MASTER DELETE (cascade handles everything)
+    // 🔥 MASTER DELETE
     await prisma.user.delete({
       where: { id: userId },
     });
 
-    // ✅ clear cookies to avoid broken session
     res.clearCookie("accessToken");
     res.clearCookie("refreshToken");
 
@@ -154,5 +129,5 @@ async function deleteUserProfile(req, res) {
 export {
   getUserProfile,
   updateUserProfile,
-  deleteUserProfile, // ✅ NEW EXPORT
+  deleteUserProfile,
 };

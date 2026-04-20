@@ -18,7 +18,7 @@ function Card({ data }) {
                  transition-all duration-200"
     >
 
-      {/* NAME / TITLE */}
+      {/* NAME */}
       <h2 className="text-lg font-semibold text-black tracking-tight">
         {data.name || data.title}
       </h2>
@@ -30,27 +30,23 @@ function Card({ data }) {
         </p>
       )}
 
-      {/* CATEGORIES */}
-      {data.categories && (
-        <div className="mt-3 flex flex-wrap gap-2">
-          {data.categories.map((c, i) => (
-            <span
+      {/* 🔥 SKILLS (FIXED) */}
+      {data.skills && data.skills.length > 0 && (
+        <div className="mt-3 space-y-1">
+          {data.skills.map((skill, i) => (
+            <div
               key={i}
-              className="text-xs bg-gray-100 text-gray-700 
-                         px-2.5 py-1 rounded-full 
-                         hover:bg-gray-200 transition"
+              className="flex justify-between text-sm"
             >
-              {c}
-            </span>
+              <span className="bg-gray-100 text-gray-700 px-2.5 py-1 rounded-full">
+                {skill.name}
+              </span>
+              <span className="text-gray-500">
+                {skill.years} yrs
+              </span>
+            </div>
           ))}
         </div>
-      )}
-
-      {/* EXPERIENCE */}
-      {data.experience && (
-        <p className="mt-3 text-sm text-gray-500">
-          Experience: {data.experience}
-        </p>
       )}
 
       {/* PRICE */}
@@ -60,7 +56,7 @@ function Card({ data }) {
         </p>
       )}
 
-      {/* ⭐ RATING */}
+      {/* RATING */}
       {data.rating ? (
         <div className="flex items-center gap-2 mt-3">
           <span className="text-yellow-500">★</span>

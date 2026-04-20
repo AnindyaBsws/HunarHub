@@ -11,7 +11,7 @@ function BecomeSeller() {
   const navigate = useNavigate();
 
   const [categories, setCategories] = useState([]);
-  const [selectedCategories, setSelectedCategories] = useState([]);
+  const [selectedCategory, setSelectedCategory] = useState(null);
 
   const [experience, setExperience] = useState({
     sector: "",
@@ -31,7 +31,7 @@ function BecomeSeller() {
       const res = await API.get("/categories");
       setCategories(res.data);
     } catch (err) {
-      console.error("ERROR FETCHING CATEGORIES:", err);
+      console.error(err);
     }
   };
 
@@ -52,39 +52,49 @@ function BecomeSeller() {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    if (!form.location || !form.phone || selectedCategories.length === 0) {
+    if (!form.location || !form.phone || !selectedCategory) {
       alert("Please fill all required fields");
       return;
     }
 
     try {
+      // ✅ Step 1: update phone
+      await API.patch("/user/profile", {
+        phone: form.phone,
+      });
+
+      // ✅ Step 2: create profile
       await API.post("/entrepreneur/profile", {
         bio: form.bio,
         location: form.location,
         avatarUrl: form.avatarUrl,
-        categories: selectedCategories.map((c) => c.id),
+        categories: [selectedCategory.id],
         experiences: [
           {
-            sector: experience.sector,
+            categoryId: selectedCategory.id,
+            sector: experience.sector || null,
             years: Number(experience.years || 0),
-            description: experience.description,
+            description: experience.description || null,
             isCurrent: true,
           },
         ],
       });
 
-      await API.patch("/user/profile", {
-        phone: form.phone,
-      });
-
-      alert("🎉 You are now a seller!");
-
-      navigate("/profile");
-      window.location.reload();
+      // ✅ SUCCESS → FORCE SYNC
+      window.location.href = "/profile";
 
     } catch (err) {
       console.error(err);
-      alert(err.response?.data?.message || "Error creating profile");
+
+      const msg = err.response?.data?.message;
+
+      // 🔥 KEY FIX: treat this as success
+      if (msg === "Profile already exists") {
+        window.location.href = "/profile";
+        return;
+      }
+
+      alert(msg || "Error creating profile");
     }
   };
 
@@ -93,152 +103,86 @@ function BecomeSeller() {
       <Navbar />
 
       <div className="pt-24 px-4 md:px-10 flex justify-center">
-
         <motion.div
           initial={{ opacity: 0, y: 40 }}
           animate={{ opacity: 1, y: 0 }}
-          className="w-full max-w-2xl bg-white rounded-2xl shadow-sm border border-gray-100 
-                     p-6 md:p-10"
+          className="w-full max-w-2xl bg-white rounded-2xl shadow-sm border p-6 md:p-10"
         >
-
-          {/* HEADER */}
-          <div className="mb-8">
-            <h2 className="text-2xl md:text-3xl font-bold">
-              Become a Seller 🚀
-            </h2>
-            <p className="text-gray-500 text-sm mt-1">
-              Share your expertise and start earning today
-            </p>
-          </div>
+          <h2 className="text-2xl font-bold mb-2">
+            Become a Seller 🚀
+          </h2>
 
           <form onSubmit={handleSubmit} className="flex flex-col gap-6">
 
-            {/* BIO */}
-            <div>
-              <label className="text-sm font-medium text-gray-600">
-                Bio
-              </label>
-              <input
-                placeholder="Tell something about yourself..."
-                onChange={(e) =>
-                  setForm({ ...form, bio: e.target.value })
-                }
-                className="w-full mt-2 px-4 py-3 rounded-xl border border-gray-200
-                           focus:outline-none focus:ring-2 focus:ring-amber-300"
-              />
-            </div>
+            <input
+              placeholder="Bio"
+              onChange={(e) =>
+                setForm({ ...form, bio: e.target.value })
+              }
+              className="w-full px-4 py-3 rounded-xl border"
+            />
 
-            {/* LOCATION */}
-            <div>
-              <label className="text-sm font-medium text-gray-600">
-                Location *
-              </label>
-              <input
-                required
-                placeholder="e.g. Kolkata"
-                onChange={(e) =>
-                  setForm({ ...form, location: e.target.value })
-                }
-                className="w-full mt-2 px-4 py-3 rounded-xl border border-gray-200
-                           focus:outline-none focus:ring-2 focus:ring-amber-300"
-              />
-            </div>
+            <input
+              required
+              placeholder="Location"
+              onChange={(e) =>
+                setForm({ ...form, location: e.target.value })
+              }
+              className="w-full px-4 py-3 rounded-xl border"
+            />
 
-            {/* PHONE */}
-            <div>
-              <label className="text-sm font-medium text-gray-600">
-                Phone *
-              </label>
-              <input
-                required
-                placeholder="e.g. 9876543210"
-                onChange={(e) =>
-                  setForm({ ...form, phone: e.target.value })
-                }
-                className="w-full mt-2 px-4 py-3 rounded-xl border border-gray-200
-                           focus:outline-none focus:ring-2 focus:ring-amber-300"
-              />
-            </div>
+            <input
+              required
+              placeholder="Phone"
+              onChange={(e) =>
+                setForm({ ...form, phone: e.target.value })
+              }
+              className="w-full px-4 py-3 rounded-xl border"
+            />
 
-            {/* CATEGORIES */}
-            <div>
-              <label className="text-sm font-medium text-gray-600">
-                Categories *
-              </label>
-              <div className="mt-2">
-                <CategorySelect
-                  categories={categories}
-                  selected={selectedCategories}
-                  setSelected={setSelectedCategories}
-                  multiple
-                />
-              </div>
-            </div>
+            <CategorySelect
+              categories={categories}
+              selected={selectedCategory}
+              setSelected={setSelectedCategory}
+            />
 
-            {/* EXPERIENCE */}
-            <div className="grid md:grid-cols-2 gap-4">
-              <div>
-                <label className="text-sm font-medium text-gray-600">
-                  Sector
-                </label>
-                <input
-                  placeholder="e.g. Web Development"
-                  onChange={(e) =>
-                    setExperience({ ...experience, sector: e.target.value })
-                  }
-                  className="w-full mt-2 px-4 py-3 rounded-xl border border-gray-200
-                             focus:outline-none focus:ring-2 focus:ring-amber-300"
-                />
-              </div>
+            <input
+              placeholder="Sector"
+              onChange={(e) =>
+                setExperience({ ...experience, sector: e.target.value })
+              }
+              className="w-full px-4 py-3 rounded-xl border"
+            />
 
-              <div>
-                <label className="text-sm font-medium text-gray-600">
-                  Years
-                </label>
-                <input
-                  type="number"
-                  placeholder="e.g. 3"
-                  onChange={(e) =>
-                    setExperience({ ...experience, years: e.target.value })
-                  }
-                  className="w-full mt-2 px-4 py-3 rounded-xl border border-gray-200
-                             focus:outline-none focus:ring-2 focus:ring-amber-300"
-                />
-              </div>
-            </div>
+            <input
+              type="number"
+              placeholder="Years"
+              onChange={(e) =>
+                setExperience({ ...experience, years: e.target.value })
+              }
+              className="w-full px-4 py-3 rounded-xl border"
+            />
 
-            {/* DESCRIPTION */}
-            <div>
-              <label className="text-sm font-medium text-gray-600">
-                Experience Description
-              </label>
-              <textarea
-                placeholder="Describe your experience..."
-                onChange={(e) =>
-                  setExperience({
-                    ...experience,
-                    description: e.target.value,
-                  })
-                }
-                className="w-full mt-2 px-4 py-3 rounded-xl border border-gray-200
-                           focus:outline-none focus:ring-2 focus:ring-amber-300
-                           min-h-[120px]"
-              />
-            </div>
+            <textarea
+              placeholder="Experience Description"
+              onChange={(e) =>
+                setExperience({
+                  ...experience,
+                  description: e.target.value,
+                })
+              }
+              className="w-full px-4 py-3 rounded-xl border"
+            />
 
-            {/* BUTTON */}
             <button
               type="submit"
-              className="bg-amber-200 hover:bg-amber-300 transition
-                         text-black py-3 rounded-xl font-semibold
-                         shadow-sm hover:shadow-md"
+              className="bg-amber-200 hover:bg-amber-300 py-3 rounded-xl font-semibold"
             >
               Become Seller
             </button>
 
           </form>
         </motion.div>
-
       </div>
     </div>
   );

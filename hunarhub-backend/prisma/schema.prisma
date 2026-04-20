@@ -44,7 +44,6 @@ model EntrepreneurProfile {
 
   bio       String?
   location  String
-  phone     String   @unique
   avatarUrl String?
 
   isAvailable Boolean @default(true)

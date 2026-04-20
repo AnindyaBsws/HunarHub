@@ -78,7 +78,6 @@ async function updateEntrepreneurProfile(req, res) {
       });
     }
 
-    // ✅ PHONE VALIDATION
     if (phone !== undefined) {
       if (phone.length > 12) {
         return res.status(400).json({
@@ -92,7 +91,6 @@ async function updateEntrepreneurProfile(req, res) {
       });
     }
 
-    // ✅ BIO VALIDATION (max 30 words)
     if (bio !== undefined) {
       const wordCount = bio.trim().split(/\s+/).length;
       if (wordCount > 30) {
@@ -170,14 +168,13 @@ async function createEntrepreneurProfile(req, res) {
         },
 
         experiences: {
-            create: (experiences || []).map((exp) => ({
-                categoryId: Number(exp.categoryId),   // ✅ FIX
-                sector: exp.sector,
-                years: exp.years,
-                isCurrent: exp.isCurrent,
-                description: exp.description,
-            })),
-
+          create: (experiences || []).map((exp) => ({
+            categoryId: Number(exp.categoryId),
+            sector: exp.sector,
+            years: exp.years,
+            isCurrent: exp.isCurrent,
+            description: exp.description,
+          })),
         },
       },
       include: {
@@ -210,21 +207,19 @@ async function addExperience(req, res) {
 
     const profile = await prisma.entrepreneurProfile.findUnique({
       where: { userId },
-      include: { experiences: true },
+      include: { experiences: true, categories: true },
     });
 
     if (!profile) {
       return res.status(404).json({ message: "Profile not found" });
     }
 
-    // ✅ LIMIT: max 4 experiences
     if (profile.experiences.length >= 4) {
       return res.status(400).json({
         message: "You can only add up to 4 skills",
       });
     }
 
-    // ✅ DUPLICATE CATEGORY CHECK
     const exists = profile.experiences.find(
       (exp) => exp.categoryId === Number(categoryId)
     );
@@ -235,13 +230,13 @@ async function addExperience(req, res) {
       });
     }
 
-    // ✅ YEARS VALIDATION
     if (Number(years) > 90) {
       return res.status(400).json({
         message: "Experience cannot exceed 90 years",
       });
     }
 
+    // ✅ CREATE EXPERIENCE
     const exp = await prisma.experience.create({
       data: {
         profileId: profile.id,
@@ -254,6 +249,22 @@ async function addExperience(req, res) {
         category: true,
       },
     });
+
+    // 🔥 FIX: ENSURE CATEGORY IS CONNECTED
+    const alreadyConnected = profile.categories.find(
+      (c) => c.id === Number(categoryId)
+    );
+
+    if (!alreadyConnected) {
+      await prisma.entrepreneurProfile.update({
+        where: { id: profile.id },
+        data: {
+          categories: {
+            connect: { id: Number(categoryId) },
+          },
+        },
+      });
+    }
 
     return res.status(201).json(exp);
 
@@ -270,7 +281,6 @@ async function updateExperience(req, res) {
     const { id } = req.params;
     const { sector, years } = req.body;
 
-    // ✅ YEARS VALIDATION
     if (years !== undefined && Number(years) > 90) {
       return res.status(400).json({
         message: "Experience cannot exceed 90 years",
@@ -313,7 +323,7 @@ async function deleteExperience(req, res) {
 }
 
 
-// DELETE /api/entrepreneur/profile
+// DELETE PROFILE
 async function deleteEntrepreneurProfile(req, res) {
   try {
     const userId = req.userId;

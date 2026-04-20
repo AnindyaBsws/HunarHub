@@ -4,10 +4,10 @@ import bcrypt from "bcrypt";
 async function main() {
   console.log("🌱 Seeding started...");
 
-  // 🔐 HASH PASSWORD
-  const hashedPassword = await bcrypt.hash("123456", 10);
+  // 🔐 HASH PASSWORD (1234)
+  const hashedPassword = await bcrypt.hash("1234", 10);
 
-  // 🧵 1. CATEGORIES (MULTIPLE)
+  // 🧵 1. CATEGORIES
   await prisma.category.createMany({
     data: [
       { name: "Tailor", description: "Clothing & stitching" },
@@ -24,12 +24,16 @@ async function main() {
     skipDuplicates: true,
   });
 
-  // 🔍 FETCH CATEGORY (Tailor for demo)
+  // 🔍 FETCH CATEGORY (Tailor)
   const tailor = await prisma.category.findUnique({
     where: { name: "Tailor" },
   });
 
-  // 👤 2. USER (SAFE UPSERT)
+  if (!tailor) {
+    throw new Error("Tailor category not found ❌");
+  }
+
+  // 👤 2. USER
   const user = await prisma.user.upsert({
     where: { email: "rahul@example.com" },
     update: {},
@@ -37,6 +41,7 @@ async function main() {
       name: "Rahul",
       email: "rahul@example.com",
       password: hashedPassword,
+      phone: "9999999999", // ✅ phone belongs to USER
     },
   });
 
@@ -48,7 +53,7 @@ async function main() {
       userId: user.id,
       bio: "Experienced tailor with 5+ years",
       location: "Kolkata",
-      phone: "9999999999",
+      avatarUrl: null,
 
       categories: {
         connect: [{ id: tailor.id }],
@@ -56,7 +61,7 @@ async function main() {
     },
   });
 
-  // 🧠 4. EXPERIENCE (linked with category)
+  // 🧠 4. EXPERIENCE
   const existingExp = await prisma.experience.findFirst({
     where: {
       profileId: profile.id,
@@ -72,6 +77,7 @@ async function main() {
         sector: "Tailoring",
         years: 5,
         isCurrent: true,
+        description: "Expert in stitching and fitting",
       },
     });
   }

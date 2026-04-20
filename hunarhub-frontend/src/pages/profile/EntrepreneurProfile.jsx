@@ -130,15 +130,6 @@ function EntrepreneurProfile() {
     }
   };
 
-  const handleUpdate = async (id) => {
-    await API.patch(`/entrepreneur/experience/${id}`, {
-      sector,
-      years,
-    });
-    setEditingExpId(null);
-    fetchProfile();
-  };
-
   const handleDelete = async (id) => {
     try {
       await API.delete(`/entrepreneur/experience/${id}`);
@@ -152,7 +143,6 @@ function EntrepreneurProfile() {
     }
   };
 
-  // 🔥 DELETE ACCOUNT
   const handleDeleteAccount = async () => {
     const confirmDelete = window.confirm(
         "Are you sure you want to delete your account? This action cannot be undone."
@@ -162,8 +152,6 @@ function EntrepreneurProfile() {
 
     try {
         await API.delete("/user/profile");
-
-        // ✅ force reset
         window.location.href = "/";
     } catch (err) {
         alert(err.response?.data?.message || "Failed to delete account");
@@ -205,16 +193,16 @@ function EntrepreneurProfile() {
           handleSave={handleSave} />
       </div>
 
-      {/* SKILLS */}
+      {/* 🔥 SKILLS (FIXED) */}
       <div className="bg-white p-6 rounded-2xl shadow-sm border">
         <div className="flex justify-between mb-4">
           <h2 className="font-semibold text-lg">Skills</h2>
 
           <button
-            disabled={profile.categories.length >= 4}
+            disabled={profile.experiences.length >= 4}
             onClick={() => setShowModal(true)}
             className={`px-4 py-2 rounded-lg text-sm transition ${
-              profile.categories.length >= 4
+              profile.experiences.length >= 4
                 ? "bg-gray-300 text-gray-500 cursor-not-allowed"
                 : "bg-black text-white hover:opacity-90"
             }`}
@@ -225,64 +213,53 @@ function EntrepreneurProfile() {
 
         <AnimatePresence>
           <div className="grid md:grid-cols-2 gap-4">
-            {profile.categories.map((cat) => {
-              const exp = profile.experiences.find(
-                (e) => e.category?.id === cat.id
-              );
+            {profile.experiences.map((exp) => (
+              <motion.div
+                key={exp.id}
+                initial={{ opacity: 0, y: 15 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, scale: 0.9 }}
+                transition={{ duration: 0.25 }}
+                className="border rounded-xl p-5 shadow-sm hover:shadow-md transition"
+              >
+                <h3 className="font-semibold mb-2">
+                  {exp.category?.name}
+                </h3>
 
-              return (
-                <motion.div
-                  key={cat.id}
-                  initial={{ opacity: 0, y: 15 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, scale: 0.9 }}
-                  transition={{ duration: 0.25 }}
-                  className="border rounded-xl p-5 shadow-sm hover:shadow-md transition"
-                >
-                  <h3 className="font-semibold mb-2">{cat.name}</h3>
+                {exp.sector && (
+                  <p className="text-sm text-gray-600">{exp.sector}</p>
+                )}
 
-                  {exp ? (
-                    <>
-                      {exp.sector && (
-                        <p className="text-sm text-gray-600">{exp.sector}</p>
-                      )}
-                      <p className="text-sm text-gray-500">{exp.years} years</p>
-                    </>
-                  ) : (
-                    <p className="text-sm text-gray-400">
-                      No experience added
-                    </p>
-                  )}
+                <p className="text-sm text-gray-500">
+                  {exp.years} years
+                </p>
 
-                  {exp && (
-                    <div className="flex justify-end gap-4 mt-3 text-sm">
-                      <button
-                        onClick={() => {
-                          setEditingExpId(exp.id);
-                          setSector(exp.sector || "");
-                          setYears(exp.years);
-                        }}
-                        className="text-gray-400 hover:text-gray-800 font-medium"
-                      >
-                        Edit
-                      </button>
+                <div className="flex justify-end gap-4 mt-3 text-sm">
+                  <button
+                    onClick={() => {
+                      setEditingExpId(exp.id);
+                      setSector(exp.sector || "");
+                      setYears(exp.years);
+                    }}
+                    className="text-gray-400 hover:text-gray-800 font-medium"
+                  >
+                    Edit
+                  </button>
 
-                      <button
-                        onClick={() => handleDelete(exp.id)}
-                        className="text-red-400 hover:text-red-600 font-medium"
-                      >
-                        Delete
-                      </button>
-                    </div>
-                  )}
-                </motion.div>
-              );
-            })}
+                  <button
+                    onClick={() => handleDelete(exp.id)}
+                    className="text-red-400 hover:text-red-600 font-medium"
+                  >
+                    Delete
+                  </button>
+                </div>
+              </motion.div>
+            ))}
           </div>
         </AnimatePresence>
       </div>
 
-      {/* 🔥 DELETE ACCOUNT */}
+      {/* DELETE ACCOUNT */}
       <div className="mt-10">
         <button
           onClick={handleDeleteAccount}
