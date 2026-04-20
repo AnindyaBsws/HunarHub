@@ -96,26 +96,37 @@ function Entrepreneur() {
 
           <h1 className="text-3xl font-bold">{data.name}</h1>
 
-          <p className="text-gray-500 mt-1">{data.location}</p>
-
-          {/* CATEGORY TAGS */}
-          <div className="flex gap-2 mt-4 flex-wrap">
-            {(data.categories || []).map((c, i) => (
-              <span
-                key={i}
-                className="bg-gray-100 text-sm px-3 py-1 rounded-full"
-              >
-                {c}
-              </span>
-            ))}
-          </div>
-
-          {/* EXPERIENCE */}
-          <p className="mt-4 text-gray-600">
-            Experience: {data.experience || "No experience"}
+          <p className="text-gray-500 mt-1">
+            {data.location || "Location not set"}
           </p>
 
-          {/* CONTACT */}
+          {/* ✅ BIO */}
+          <p className="mt-4 text-gray-700">
+            {data.bio || "No bio available"}
+          </p>
+
+          {/* ✅ SKILLS LIST */}
+          <div className="mt-5">
+            <h3 className="font-semibold text-gray-800 mb-2">
+              Skills
+            </h3>
+
+            {data.skills && data.skills.length > 0 ? (
+              <div className="space-y-1">
+                {data.skills.map((skill, i) => (
+                  <p key={i} className="text-sm text-gray-600">
+                    {skill.name} • {skill.years} yrs
+                  </p>
+                ))}
+              </div>
+            ) : (
+              <p className="text-gray-400 text-sm">
+                No skills available
+              </p>
+            )}
+          </div>
+
+          {/* 🔐 CONTACT */}
           {data.hasAccess ? (
             <div className="mt-5 bg-green-50 p-4 rounded-lg border border-green-200">
               <p>📞 {data.phone}</p>
