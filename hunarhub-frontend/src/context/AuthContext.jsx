@@ -8,12 +8,11 @@ export function AuthProvider({ children }) {
   const [isSeller, setIsSeller] = useState(false);
   const [loading, setLoading] = useState(true);
 
-  // ✅ INITIAL LOAD (CONDITIONAL REFRESH)
+  // ✅ INITIAL LOAD
   useEffect(() => {
     const init = async () => {
       const hasLoggedIn = localStorage.getItem("hasLoggedIn");
 
-      // ❌ If user never logged in → skip refresh call
       if (!hasLoggedIn) {
         setLoading(false);
         return;
@@ -21,16 +20,23 @@ export function AuthProvider({ children }) {
 
       try {
         const res = await API.post("/users/refresh");
-
         const userData = res.data.user;
 
         setUser(userData);
-        setIsSeller(userData?.isSeller || false);
+
+        // 🔥 CHECK SELLER STATUS FROM BACKEND
+        try {
+          await API.get("/entrepreneur/profile");
+          setIsSeller(true);
+        } catch {
+          setIsSeller(false);
+        }
+
       } catch {
         setUser(null);
         setIsSeller(false);
       } finally {
-        setLoading(false);
+        setLoading(false); // ✅ IMPORTANT FIX
       }
     };
 
@@ -40,13 +46,18 @@ export function AuthProvider({ children }) {
   // ✅ LOGIN
   const login = async (data) => {
     const res = await API.post("/users/login", data);
-
     const userData = res.data.user;
 
     setUser(userData);
-    setIsSeller(userData.isSeller);
 
-    // ✅ mark that user has logged in
+    // 🔥 VERIFY SELLER AFTER LOGIN
+    try {
+      await API.get("/entrepreneur/profile");
+      setIsSeller(true);
+    } catch {
+      setIsSeller(false);
+    }
+
     localStorage.setItem("hasLoggedIn", "true");
   };
 
@@ -60,8 +71,6 @@ export function AuthProvider({ children }) {
     await API.post("/users/logout");
     setUser(null);
     setIsSeller(false);
-
-    // ✅ remove login flag
     localStorage.removeItem("hasLoggedIn");
   };
 

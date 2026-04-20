@@ -4,7 +4,7 @@ import { useAuth } from "../../context/AuthContext";
 import { useNavigate } from "react-router-dom";
 
 function UserProfile() {
-  const { user, isSeller } = useAuth();
+  const { user, isSeller } = useAuth(); // ❌ removed logout
   const navigate = useNavigate();
 
   const [phone, setPhone] = useState("");
@@ -37,10 +37,27 @@ function UserProfile() {
     }
   };
 
+  // 🔥 DELETE ACCOUNT
+  const handleDeleteAccount = async () => {
+    const confirmDelete = window.confirm(
+      "Are you sure you want to delete your account? This action cannot be undone."
+    );
+
+    if (!confirmDelete) return;
+
+    try {
+      await API.delete("/user/profile");
+
+      // ✅ force full reset (no logout call)
+      window.location.href = "/";
+    } catch (err) {
+      alert(err.response?.data?.message || "Failed to delete account");
+    }
+  };
+
   return (
     <div className="pt-24 px-4 md:px-10 max-w-3xl mx-auto">
 
-      {/* HEADER */}
       <div className="mb-10">
         <h1 className="text-3xl md:text-4xl font-bold">
           {user.name}
@@ -50,9 +67,7 @@ function UserProfile() {
         </p>
       </div>
 
-      {/* PROFILE CARD */}
       <div className="bg-white p-6 rounded-2xl border shadow-sm">
-
         <p className="text-sm text-gray-500 mb-2">Phone</p>
 
         {editing ? (
@@ -83,10 +98,8 @@ function UserProfile() {
             </button>
           </div>
         )}
-
       </div>
 
-      {/* CTA */}
       {!isSeller && (
         <div className="mt-8">
           <button
@@ -98,6 +111,16 @@ function UserProfile() {
           </button>
         </div>
       )}
+
+      <div className="mt-10">
+        <button
+          onClick={handleDeleteAccount}
+          className="w-full md:w-auto px-6 py-3 rounded-full font-semibold 
+                     bg-red-100 text-red-600 hover:bg-red-200"
+        >
+          Delete Account
+        </button>
+      </div>
 
     </div>
   );
