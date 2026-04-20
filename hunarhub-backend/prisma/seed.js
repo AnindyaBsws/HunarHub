@@ -1,38 +1,46 @@
 import prisma from "../src/config/prisma.js";
+import bcrypt from "bcrypt";
 
 async function main() {
+  console.log("🌱 Seeding started...");
 
-  // 🧵 1. Categories
-  const tailor = await prisma.category.upsert({
+  // 🔐 HASH PASSWORD
+  const hashedPassword = await bcrypt.hash("123456", 10);
+
+  // 🧵 1. CATEGORIES (MULTIPLE)
+  await prisma.category.createMany({
+    data: [
+      { name: "Tailor", description: "Clothing & stitching" },
+      { name: "Electrician", description: "Electrical services" },
+      { name: "Plumber", description: "Water & pipe fixing" },
+      { name: "Carpenter", description: "Woodwork & furniture" },
+      { name: "Painter", description: "Painting services" },
+      { name: "Mechanic", description: "Vehicle repair" },
+      { name: "Cleaner", description: "Cleaning services" },
+      { name: "Gardener", description: "Garden maintenance" },
+      { name: "AC Technician", description: "AC repair & service" },
+      { name: "Mason", description: "Construction work" },
+    ],
+    skipDuplicates: true,
+  });
+
+  // 🔍 FETCH CATEGORY (Tailor for demo)
+  const tailor = await prisma.category.findUnique({
     where: { name: "Tailor" },
-    update: {},
-    create: {
-      name: "Tailor",
-      description: "Clothing and stitching services",
-    },
   });
 
-  const electrician = await prisma.category.upsert({
-    where: { name: "Electrician" },
-    update: {},
-    create: {
-      name: "Electrician",
-      description: "Electrical services",
-    },
-  });
-
-  // 👤 2. User (SAFE UPSERT ✅)
+  // 👤 2. USER (SAFE UPSERT)
   const user = await prisma.user.upsert({
     where: { email: "rahul@example.com" },
     update: {},
     create: {
       name: "Rahul",
       email: "rahul@example.com",
-      password: "123456",
+      password: hashedPassword,
     },
   });
 
-  // 🧑‍💼 3. Entrepreneur Profile (SAFE UPSERT ✅)
+  // 🧑‍💼 3. ENTREPRENEUR PROFILE
   const profile = await prisma.entrepreneurProfile.upsert({
     where: { userId: user.id },
     update: {},
@@ -48,7 +56,7 @@ async function main() {
     },
   });
 
-  // 🧠 4. Experience (avoid duplicates)
+  // 🧠 4. EXPERIENCE (linked with category)
   const existingExp = await prisma.experience.findFirst({
     where: {
       profileId: profile.id,
@@ -68,7 +76,7 @@ async function main() {
     });
   }
 
-  // 🛠 5. Services (simple safe insert)
+  // 🛠 5. SERVICES
   const existingServices = await prisma.service.findMany({
     where: { profileId: profile.id },
   });
@@ -92,12 +100,12 @@ async function main() {
     });
   }
 
-  console.log("🌱 Database seeded successfully!");
+  console.log("✅ Database seeded successfully!");
 }
 
 main()
   .catch((e) => {
-    console.error(e);
+    console.error("❌ Seed error:", e);
   })
   .finally(async () => {
     await prisma.$disconnect();

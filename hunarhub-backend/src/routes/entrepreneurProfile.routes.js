@@ -5,6 +5,10 @@ import {
   getEntrepreneurProfile,
   updateEntrepreneurProfile,
   createEntrepreneurProfile,
+  addExperience,
+  updateExperience,
+  deleteExperience,
+  deleteEntrepreneurProfile,
 } from "../controllers/entrepreneurProfile.controller.js";
 
 const router = express.Router();
@@ -19,5 +23,19 @@ router.get("/profile", authMiddleware, getEntrepreneurProfile);
 
 // Update entrepreneur profile
 router.patch("/profile", authMiddleware, updateEntrepreneurProfile);
+
+// ---------------- EXPERIENCE / SKILLS ROUTES ----------------
+
+// Add skill
+router.post("/experience", authMiddleware, addExperience);
+
+// Update skill
+router.patch("/experience/:id", authMiddleware, updateExperience);
+
+// Delete skill
+router.delete("/experience/:id", authMiddleware, deleteExperience);
+
+//Delete profile
+router.delete("/profile", authMiddleware, deleteEntrepreneurProfile);
 
 export default router;

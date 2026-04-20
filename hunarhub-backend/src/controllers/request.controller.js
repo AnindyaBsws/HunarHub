@@ -72,6 +72,13 @@ async function getIncomingRequests(req, res) {
         const userId = req.userId || req.user?.id;
         const { status } = req.query;
 
+        // ✅ FIX ADDED
+        if (!userId) {
+            return res.status(401).json({
+                message: "Unauthorized"
+            });
+        }
+
         const profile = await prisma.entrepreneurProfile.findUnique({
             where: { userId }
         });
@@ -88,7 +95,6 @@ async function getIncomingRequests(req, res) {
                     profileId: profile.id
                 },
 
-                // 🔥 REMOVE REJECTED COMPLETELY
                 NOT: {
                     status: "REJECTED"
                 },
@@ -138,8 +144,6 @@ async function getMyRequests(req, res) {
                         }
                     }
                 },
-
-                // ✅ VERY IMPORTANT (THIS FIXES YOUR BUG)
                 review: true
             },
 
@@ -161,8 +165,6 @@ async function getMyRequests(req, res) {
 async function updateRequestStatus(req, res) {
     try {
         const { id } = req.params;
-
-        // ✅ SAFE BODY
         const { status, sellerMessage } = req.body || {};
 
         if (!status) {
@@ -190,7 +192,6 @@ async function updateRequestStatus(req, res) {
 
         const userId = req.userId || req.user?.id;
 
-        // ❌ Only service owner can update
         if (request.service.profile.userId !== userId) {
             return res.status(403).json({
                 message: "Not authorized"
