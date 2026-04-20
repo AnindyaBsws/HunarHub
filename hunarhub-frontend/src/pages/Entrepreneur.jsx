@@ -100,7 +100,7 @@ function Entrepreneur() {
 
           {/* CATEGORY TAGS */}
           <div className="flex gap-2 mt-4 flex-wrap">
-            {data.categories.map((c, i) => (
+            {(data.categories || []).map((c, i) => (
               <span
                 key={i}
                 className="bg-gray-100 text-sm px-3 py-1 rounded-full"
@@ -112,7 +112,7 @@ function Entrepreneur() {
 
           {/* EXPERIENCE */}
           <p className="mt-4 text-gray-600">
-            Experience: {data.experience}
+            Experience: {data.experience || "No experience"}
           </p>
 
           {/* CONTACT */}
@@ -172,7 +172,7 @@ function Entrepreneur() {
                 {/* REVIEWS */}
                 <div className="mt-2 space-y-1">
                   {reviewsMap[s.id]?.reviews
-                    .slice(0, 2)
+                    ?.slice(0, 2)
                     .map((r, i) => (
                       <p
                         key={i}
