@@ -4,10 +4,12 @@ import API from "../api/axios";
 import Navbar from "../components/Navbar";
 import CategorySelect from "../components/CategorySelect";
 import { useAuth } from "../context/AuthContext";
+import { useToast } from "../context/ToastContext"; // ✅ NEW
 import { motion } from "framer-motion";
 
 function BecomeSeller() {
   const { user, isSeller } = useAuth();
+  const { addToast } = useToast(); // ✅ NEW
   const navigate = useNavigate();
 
   const [categories, setCategories] = useState([]);
@@ -53,17 +55,15 @@ function BecomeSeller() {
     e.preventDefault();
 
     if (!form.location || !form.phone || !selectedCategory) {
-      alert("Please fill all required fields");
+      addToast("Please fill all required fields", "error"); // ✅ FIX
       return;
     }
 
     try {
-      // ✅ Step 1: update phone
       await API.patch("/user/profile", {
         phone: form.phone,
       });
 
-      // ✅ Step 2: create profile
       await API.post("/entrepreneur/profile", {
         bio: form.bio,
         location: form.location,
@@ -80,7 +80,6 @@ function BecomeSeller() {
         ],
       });
 
-      // ✅ SUCCESS → FORCE SYNC
       window.location.href = "/profile";
 
     } catch (err) {
@@ -88,13 +87,12 @@ function BecomeSeller() {
 
       const msg = err.response?.data?.message;
 
-      // 🔥 KEY FIX: treat this as success
       if (msg === "Profile already exists") {
         window.location.href = "/profile";
         return;
       }
 
-      alert(msg || "Error creating profile");
+      addToast(msg || "Error creating profile", "error"); // ✅ FIX
     }
   };
 

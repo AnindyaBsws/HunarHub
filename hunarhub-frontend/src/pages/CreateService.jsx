@@ -2,10 +2,12 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import API from "../api/axios";
 import Navbar from "../components/Navbar";
+import { useToast } from "../context/ToastContext"; // ✅ NEW
 import { motion } from "framer-motion";
 
 function CreateService() {
   const navigate = useNavigate();
+  const { addToast } = useToast(); // ✅ NEW
 
   const [form, setForm] = useState({
     title: "",
@@ -19,7 +21,7 @@ function CreateService() {
     e.preventDefault();
 
     if (!form.title || !form.price) {
-      alert("Title and price are required");
+      addToast("Title and price are required", "error"); // ✅ FIX
       return;
     }
 
@@ -36,7 +38,11 @@ function CreateService() {
 
     } catch (err) {
       console.error("ERROR:", err.response?.data);
-      alert(err.response?.data?.message || "Error creating service");
+
+      addToast(
+        err.response?.data?.message || "Error creating service",
+        "error"
+      ); // ✅ FIX
     } finally {
       setLoading(false);
     }

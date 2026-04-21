@@ -4,13 +4,17 @@ import Navbar from "../components/Navbar";
 import { useAuth } from "../context/AuthContext";
 import { useNotifications } from "../hooks/useNotifications";
 import { motion } from "framer-motion";
+import AcceptModal from "../components/AcceptModal";
+import { useToast } from "../context/ToastContext";
 
 function Requests() {
   const [requests, setRequests] = useState([]);
+  const [selectedRequestId, setSelectedRequestId] = useState(null);
+
   const { user } = useAuth();
   const { clearIncoming } = useNotifications(user);
+  const { addToast } = useToast();
 
-  // 🔥 FETCH REQUESTS
   const fetchRequests = async () => {
     try {
       const res = await API.get("/requests/incoming");
@@ -22,21 +26,9 @@ function Requests() {
     }
   };
 
-  // 🔥 ACCEPT
-  const handleAccept = async (id) => {
-    const msg = prompt("Send message to user:");
-    if (!msg) return;
-
-    try {
-      await API.patch(`/requests/${id}`, {
-        status: "ACCEPTED",
-        sellerMessage: msg,
-      });
-
-      fetchRequests();
-    } catch (err) {
-      console.error(err);
-    }
+  // 🔥 ACCEPT → OPEN MODAL
+  const handleAccept = (id) => {
+    setSelectedRequestId(id);
   };
 
   // 🔥 REJECT
@@ -46,9 +38,15 @@ function Requests() {
         status: "REJECTED",
       });
 
+      addToast("Request rejected", "success");
+
       fetchRequests();
     } catch (err) {
       console.error(err);
+      addToast(
+        err.response?.data?.message || "Error rejecting request",
+        "error"
+      );
     }
   };
 
@@ -62,12 +60,10 @@ function Requests() {
 
       <div className="pt-24 px-4 md:px-10 max-w-6xl mx-auto">
 
-        {/* HEADER */}
         <h1 className="text-3xl font-bold mb-4">
           Incoming Requests
         </h1>
 
-        {/* NOTICE */}
         <p className="text-gray-500 mb-8 text-sm">
           • Accepted requests remain for 2 days <br />
           • Rejected requests are removed immediately
@@ -90,10 +86,7 @@ function Requests() {
                            hover:shadow-md transition-all"
               >
 
-                {/* TOP ROW */}
                 <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3">
-
-                  {/* USER INFO */}
                   <div>
                     <p className="font-semibold text-lg">
                       {r.user.name}
@@ -103,7 +96,6 @@ function Requests() {
                     </p>
                   </div>
 
-                  {/* STATUS BADGE */}
                   <span
                     className={`px-3 py-1 text-xs rounded-full font-medium
                       ${
@@ -118,7 +110,6 @@ function Requests() {
                   </span>
                 </div>
 
-                {/* SERVICE */}
                 <div className="mt-4 flex justify-between items-center">
                   <div>
                     <p className="text-sm text-gray-400">Service</p>
@@ -132,14 +123,12 @@ function Requests() {
                   </p>
                 </div>
 
-                {/* MESSAGE */}
                 {r.message && (
                   <div className="mt-4 bg-gray-50 border rounded-lg p-3 text-sm text-gray-700">
                     “{r.message}”
                   </div>
                 )}
 
-                {/* ACTIONS */}
                 {r.status === "PENDING" && (
                   <div className="flex gap-3 mt-5">
 
@@ -168,6 +157,14 @@ function Requests() {
           </div>
         )}
       </div>
+
+      {/* 🔥 ACCEPT MODAL */}
+      <AcceptModal
+        isOpen={!!selectedRequestId}
+        onClose={() => setSelectedRequestId(null)}
+        requestId={selectedRequestId}
+        onSuccess={fetchRequests}
+      />
     </div>
   );
 }

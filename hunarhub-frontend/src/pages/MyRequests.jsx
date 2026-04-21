@@ -6,15 +6,20 @@ import { useNotifications } from "../hooks/useNotifications";
 import { useNavigate } from "react-router-dom";
 import ReviewModal from "../components/ReviewModal";
 import { motion } from "framer-motion";
+import { useToast } from "../context/ToastContext";
 
 function MyRequests() {
   const [requests, setRequests] = useState([]);
   const [selectedRequest, setSelectedRequest] = useState(null);
   const [reviewRequestId, setReviewRequestId] = useState(null);
 
+  // 🔥 NEW: track double-click confirmation
+  const [confirmId, setConfirmId] = useState(null);
+
   const { user } = useAuth();
   const { clearMyRequests } = useNotifications(user);
   const navigate = useNavigate();
+  const { addToast } = useToast();
 
   const fetchRequests = async () => {
     try {
@@ -28,14 +33,34 @@ function MyRequests() {
   };
 
   const handleDelete = async (id) => {
-    const confirm = window.confirm("Withdraw this request?");
-    if (!confirm) return;
+    // 🔥 FIRST CLICK
+    if (confirmId !== id) {
+      setConfirmId(id);
 
+      addToast("Click again to confirm withdrawal", "warning");
+
+      // reset after 3 sec
+      setTimeout(() => {
+        setConfirmId(null);
+      }, 3000);
+
+      return;
+    }
+
+    // 🔥 SECOND CLICK → DELETE
     try {
       await API.delete(`/requests/${id}`);
+
+      addToast("Request withdrawn successfully", "success");
+
+      setConfirmId(null);
       fetchRequests();
     } catch (err) {
       console.error(err);
+      addToast(
+        err.response?.data?.message || "Error withdrawing request",
+        "error"
+      );
     }
   };
 
@@ -149,15 +174,18 @@ function MyRequests() {
                   {r.status === "PENDING" && (
                     <button
                       onClick={() => handleDelete(r.id)}
-                      className="bg-red-500 hover:bg-red-400 transition
-                                 text-white px-4 py-2 rounded-lg text-sm"
+                      className={`transition px-4 py-2 rounded-lg text-sm ${
+                        confirmId === r.id
+                          ? "bg-red-600 text-white"
+                          : "bg-red-500 hover:bg-red-400 text-white"
+                      }`}
                     >
-                      Withdraw
+                      {confirmId === r.id ? "Confirm Withdraw" : "Withdraw"}
                     </button>
                   )}
                 </div>
 
-                {/* REVIEW MODAL (kept exactly same logic) */}
+                {/* REVIEW MODAL */}
                 <ReviewModal
                   isOpen={!!reviewRequestId}
                   onClose={() => setReviewRequestId(null)}
@@ -172,7 +200,6 @@ function MyRequests() {
         )}
       </div>
 
-      {/* 🔥 SECOND MODAL (kept untouched) */}
       <ReviewModal
         isOpen={!!selectedRequest}
         onClose={() => setSelectedRequest(null)}

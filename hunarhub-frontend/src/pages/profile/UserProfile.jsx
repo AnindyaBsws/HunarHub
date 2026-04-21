@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import API from "../../api/axios";
 import { useAuth } from "../../context/AuthContext";
 import { useNavigate } from "react-router-dom";
+import { useToast } from "../../context/ToastContext";
 
 function UserProfile() {
   const { user, isSeller } = useAuth(); // ❌ removed logout
@@ -9,6 +10,7 @@ function UserProfile() {
 
   const [phone, setPhone] = useState("");
   const [editing, setEditing] = useState(false);
+  const { addToast } = useToast();
 
   const fetchProfile = async () => {
     try {
@@ -16,6 +18,7 @@ function UserProfile() {
       setPhone(res.data.phone || "");
     } catch (err) {
       console.error(err);
+      addToast("Failed to load profile", "error");
     }
   };
 
@@ -25,15 +28,16 @@ function UserProfile() {
 
   const updatePhone = async () => {
     if (!phone || phone.length < 5) {
-      alert("Enter valid phone");
+      addToast("Enter valid phone", "error");
       return;
     }
 
     try {
       await API.patch("/user/profile", { phone });
       setEditing(false);
+      addToast("Phone updated successfully", "success");
     } catch (err) {
-      alert(err.response?.data?.message || "Update failed");
+      addToast(err.response?.data?.message || "Update failed","error");
     }
   };
 
@@ -51,7 +55,7 @@ function UserProfile() {
       // ✅ force full reset (no logout call)
       window.location.href = "/";
     } catch (err) {
-      alert(err.response?.data?.message || "Failed to delete account");
+      addToast(err.response?.data?.message || "Failed to delete account","error");
     }
   };
 

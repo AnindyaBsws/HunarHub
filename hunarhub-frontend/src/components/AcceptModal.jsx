@@ -1,18 +1,18 @@
 import { motion } from "framer-motion";
-import API from "../api/axios";
 import { useState } from "react";
+import API from "../api/axios";
 import { useToast } from "../context/ToastContext";
 
-function RequestModal({ isOpen, onClose, serviceId }) {
+function AcceptModal({ isOpen, onClose, requestId, onSuccess }) {
   const [message, setMessage] = useState("");
   const [loading, setLoading] = useState(false);
 
-  const { addToast } = useToast(); // ✅ consistent naming
+  const { addToast } = useToast();
 
-  const sendRequest = async () => {
-    const trimmedMessage = message.trim();
+  const handleAccept = async () => {
+    const trimmed = message.trim();
 
-    if (!trimmedMessage || trimmedMessage.length < 2) {
+    if (!trimmed || trimmed.length < 2) {
       addToast("Please enter a valid message", "error");
       return;
     }
@@ -20,25 +20,25 @@ function RequestModal({ isOpen, onClose, serviceId }) {
     try {
       setLoading(true);
 
-      await API.post("/requests/create", {
-        serviceId,
-        message: trimmedMessage,
+      await API.patch(`/requests/${requestId}`, {
+        status: "ACCEPTED",
+        sellerMessage: trimmed,
       });
 
-      addToast("Request sent successfully!", "success");
+      addToast("Request accepted successfully", "success");
 
       setMessage("");
 
-      // 🔥 small delay for smooth UX
       setTimeout(() => {
         onClose();
       }, 300);
 
+      if (onSuccess) onSuccess();
+
     } catch (err) {
       console.error(err);
-
       addToast(
-        err.response?.data?.message || "Error sending request",
+        err.response?.data?.message || "Error accepting request",
         "error"
       );
     } finally {
@@ -52,18 +52,18 @@ function RequestModal({ isOpen, onClose, serviceId }) {
     <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50">
 
       <motion.div
-        initial={{ scale: 0.8, opacity: 0 }}
+        initial={{ scale: 0.85, opacity: 0 }}
         animate={{ scale: 1, opacity: 1 }}
         className="bg-white text-black p-6 rounded-xl w-[400px]"
       >
         <h2 className="text-xl font-semibold mb-4">
-          Send Request
+          Accept Request
         </h2>
 
         <textarea
           value={message}
           onChange={(e) => setMessage(e.target.value)}
-          placeholder="Describe your requirement..."
+          placeholder="Send message to user..."
           className="w-full border p-2 rounded h-24"
         />
 
@@ -73,12 +73,12 @@ function RequestModal({ isOpen, onClose, serviceId }) {
           </button>
 
           <button
-            onClick={sendRequest}
+            onClick={handleAccept}
             disabled={loading}
-            className="bg-amber-200 px-4 py-2 rounded transition 
+            className="bg-green-500 text-white px-4 py-2 rounded 
                        disabled:opacity-50"
           >
-            {loading ? "Sending..." : "Send"}
+            {loading ? "Accepting..." : "Accept"}
           </button>
         </div>
       </motion.div>
@@ -87,4 +87,4 @@ function RequestModal({ isOpen, onClose, serviceId }) {
   );
 }
 
-export default RequestModal;
+export default AcceptModal;

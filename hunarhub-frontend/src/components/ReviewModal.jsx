@@ -1,23 +1,31 @@
 import { useState } from "react";
 import API from "../api/axios";
+import { useToast } from "../context/ToastContext";
 
 function ReviewModal({ isOpen, onClose, requestId, onSuccess }) {
   const [rating, setRating] = useState(5);
   const [comment, setComment] = useState("");
+  const [loading, setLoading] = useState(false);
+
+  const { addToast } = useToast(); // ✅ consistent
 
   const submitReview = async () => {
     try {
+      setLoading(true);
+
       await API.post("/reviews/create", {
         requestId,
         rating,
         comment,
       });
 
-      alert("Review submitted!");
+      addToast("Review submitted!", "success");
 
-      onClose();
+      // 🔥 smoother UX
+      setTimeout(() => {
+        onClose();
+      }, 300);
 
-      // ✅ SAFE CALL
       if (onSuccess) {
         onSuccess();
       }
@@ -25,9 +33,12 @@ function ReviewModal({ isOpen, onClose, requestId, onSuccess }) {
     } catch (err) {
       console.error(err);
 
-      alert(
-        err.response?.data?.message || "Error submitting review"
+      addToast(
+        err.response?.data?.message || "Error submitting review",
+        "error"
       );
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -59,11 +70,14 @@ function ReviewModal({ isOpen, onClose, requestId, onSuccess }) {
 
         <div className="flex justify-end gap-3 mt-4">
           <button onClick={onClose}>Cancel</button>
+
           <button
             onClick={submitReview}
-            className="bg-yellow-400 px-4 py-2 rounded"
+            disabled={loading}
+            className="bg-yellow-400 px-4 py-2 rounded transition 
+                       disabled:opacity-50"
           >
-            Submit
+            {loading ? "Submitting..." : "Submit"}
           </button>
         </div>
       </div>

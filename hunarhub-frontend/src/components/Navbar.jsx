@@ -29,8 +29,6 @@ function Navbar() {
 
     ...(user
       ? [
-          { name: "Dashboard", path: "/dashboard" },
-
           ...(isSeller
             ? [{
                 name: "Requests",
@@ -77,54 +75,57 @@ function Navbar() {
       initial={{ opacity: 0, y: -30 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.3 }}
-      className="absolute top-6 left-0 w-full flex items-center justify-between px-6 md:px-10 z-50"
+      className="fixed top-0 left-0 w-full flex items-center justify-between px-6 md:px-10 py-4 z-50 backdrop-blur-[6px] bg-white/30"
     >
 
       {/* LOGO */}
       <motion.h1
         whileHover={{ scale: 1.05 }}
         onClick={() => navigate("/")}
-        className="text-black text-[25px] text-lg font-semibold tracking-tight cursor-pointer"
-        >
+        className="text-black text-[25px] font-semibold tracking-tight cursor-pointer"
+      >
         Hunar<span className="text-gray-400">Hub</span>
-        </motion.h1>
+      </motion.h1>
 
-      {/* NAV ITEMS */}
-      <div className="relative hidden md:flex px-4 py-1.5 rounded-full border border-gray-200 shadow-xl overflow-hidden">
+      {/* 🔥 CENTER NAV (FLOATING PILL) */}
+      <div className="absolute left-1/2 transform -translate-x-1/2 hidden md:block">
 
-        {/* 🔥 Glow layer */}
-        <motion.div
-          style={{
-            background: `radial-gradient(circle at ${glowX} ${glowY}, rgba(255,255,255,0.8), transparent 60%)`,
-          }}
-          className="absolute inset-0 pointer-events-none opacity-60"
-        />
+        <div className="relative px-4 py-1.5 rounded-full border border-gray-200 shadow-xl overflow-hidden">
 
-        <div className="relative flex gap-4 text-[13px] text-gray-600 backdrop-blur-md bg-white/70 rounded-full px-6 py-2">
+          {/* Glow */}
+          <motion.div
+            style={{
+              background: `radial-gradient(circle at ${glowX} ${glowY}, rgba(255,255,255,0.8), transparent 60%)`,
+            }}
+            className="absolute inset-0 pointer-events-none opacity-60"
+          />
 
-          {navItems.map((item, i) => {
-            const isActive = location.pathname === item.path;
+          <div className="relative flex gap-4 text-[13px] text-gray-600 backdrop-blur-md bg-white/70 rounded-full px-6 py-2">
 
-            return (
-              <motion.span
-                key={i}
-                onClick={() => handleNavClick(item)}
-                whileHover={{ y: -2 }}
-                className={`relative cursor-pointer transition ${
-                  isActive
-                    ? "text-black font-medium"
-                    : "hover:text-black"
-                }`}
-              >
-                {item.name}
+            {navItems.map((item, i) => {
+              const isActive = location.pathname === item.path;
 
-                {/* 🔴 NOTIFICATION DOT */}
-                {item.notify && (
-                  <span className="absolute -top-1 -right-2 w-2 h-2 bg-red-500 rounded-full animate-pulse" />
-                )}
-              </motion.span>
-            );
-          })}
+              return (
+                <motion.span
+                  key={i}
+                  onClick={() => handleNavClick(item)}
+                  whileHover={{ y: -2 }}
+                  className={`relative cursor-pointer transition ${
+                    isActive
+                      ? "text-black font-medium"
+                      : "hover:text-black"
+                  }`}
+                >
+                  {item.name}
+
+                  {/* 🔴 NOTIFICATION DOT */}
+                  {item.notify && (
+                    <span className="absolute -top-1 -right-2 w-2 h-2 bg-red-500 rounded-full animate-pulse" />
+                  )}
+                </motion.span>
+              );
+            })}
+          </div>
         </div>
       </div>
 
@@ -134,7 +135,7 @@ function Navbar() {
           <>
             <motion.button
               whileHover={{ y: -1 }}
-              className="cursor-pointer gap-4 text-[15px] text-gray-700 hover:text-black transition"
+              className="text-[15px] text-gray-700 hover:text-black transition"
               onClick={() => navigate("/login")}
             >
               Login
@@ -144,7 +145,7 @@ function Navbar() {
               onClick={() => navigate("/register")}
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
-              className="cursor-pointer gap-4 text-[15px] bg-gray-100 text-black px-4 py-2 rounded-full shadow-md"
+              className="text-[15px] bg-gray-100 text-black px-4 py-2 rounded-full shadow-md"
             >
               Register
             </motion.button>

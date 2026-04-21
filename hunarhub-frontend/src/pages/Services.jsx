@@ -3,11 +3,18 @@ import API from "../api/axios";
 import Navbar from "../components/Navbar";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
+import { useToast } from "../context/ToastContext";
 
 function Services() {
   const [services, setServices] = useState([]);
   const [editingId, setEditingId] = useState(null);
   const [editData, setEditData] = useState({});
+  const [loading, setLoading] = useState(false);
+
+  // 🔥 double confirm delete
+  const [confirmId, setConfirmId] = useState(null);
+
+  const { addToast } = useToast();
 
   const navigate = useNavigate();
 
@@ -24,27 +31,63 @@ function Services() {
     fetchServices();
   }, []);
 
+  // 🔥 DELETE
   const handleDelete = async (id) => {
+    if (confirmId !== id) {
+      setConfirmId(id);
+      addToast("Click again to confirm delete", "warning");
+
+      setTimeout(() => {
+        setConfirmId(null);
+      }, 3000);
+
+      return;
+    }
+
     try {
       await API.delete(`/services/${id}`);
+      addToast("Service deleted", "success");
+
+      setConfirmId(null);
       fetchServices();
     } catch (err) {
       console.error(err);
+      addToast(
+        err.response?.data?.message || "Error deleting service",
+        "error"
+      );
     }
   };
 
+  // 🔥 START EDIT
   const startEdit = (service) => {
     setEditingId(service.id);
     setEditData(service);
   };
 
+  // 🔥 SAVE EDIT
   const saveEdit = async () => {
     try {
-      await API.patch(`/services/${editingId}`, editData);
+      setLoading(true);
+
+      await API.patch(`/services/${editingId}`, {
+        title: editData.title,
+        description: editData.description,
+        price: Number(editData.price),
+      });
+
+      addToast("Service updated successfully", "success");
+
       setEditingId(null);
       fetchServices();
     } catch (err) {
       console.error(err);
+      addToast(
+        err.response?.data?.message || "Error updating service",
+        "error"
+      );
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -114,9 +157,11 @@ function Services() {
                     <div className="flex gap-3 mt-4">
                       <button
                         onClick={saveEdit}
-                        className="flex-1 bg-green-500 text-white py-2 rounded-lg"
+                        disabled={loading}
+                        className="flex-1 bg-green-500 text-white py-2 rounded-lg
+                                   disabled:opacity-50"
                       >
-                        Save
+                        {loading ? "Saving..." : "Save"}
                       </button>
 
                       <button
@@ -129,22 +174,18 @@ function Services() {
                   </>
                 ) : (
                   <>
-                    {/* TITLE */}
                     <h3 className="font-semibold text-lg leading-snug line-clamp-2">
                       {s.title}
                     </h3>
 
-                    {/* DESCRIPTION */}
                     <p className="text-gray-500 text-sm mt-2 line-clamp-2">
                       {s.description}
                     </p>
 
-                    {/* RATING (placeholder) */}
                     <div className="mt-3 text-sm text-yellow-500">
                       ⭐ 4.5 <span className="text-gray-400">(12)</span>
                     </div>
 
-                    {/* PRICE */}
                     <div className="mt-4 flex justify-between items-center">
                       <span className="text-gray-400 text-xs">
                         Starting at
@@ -155,7 +196,6 @@ function Services() {
                       </span>
                     </div>
 
-                    {/* ACTIONS */}
                     <div className="flex gap-2 mt-5">
                       <button
                         onClick={() => startEdit(s)}
@@ -167,10 +207,13 @@ function Services() {
 
                       <button
                         onClick={() => handleDelete(s.id)}
-                        className="flex-1 bg-red-500 hover:bg-red-400 transition 
-                                   text-white py-2 rounded-lg text-sm"
+                        className={`flex-1 transition text-white py-2 rounded-lg text-sm ${
+                          confirmId === s.id
+                            ? "bg-red-700"
+                            : "bg-red-500 hover:bg-red-400"
+                        }`}
                       >
-                        Delete
+                        {confirmId === s.id ? "Confirm Delete" : "Delete"}
                       </button>
                     </div>
                   </>

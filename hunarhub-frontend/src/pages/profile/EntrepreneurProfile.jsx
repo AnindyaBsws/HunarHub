@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import API from "../../api/axios";
 import CategorySelect from "../../components/CategorySelect";
 import { motion, AnimatePresence } from "framer-motion";
+import { useToast } from "../../context/ToastContext";
 
 function Editable({
   label,
@@ -64,6 +65,7 @@ function EntrepreneurProfile() {
   const [years, setYears] = useState("");
   const [editingExpId, setEditingExpId] = useState(null);
   const [error, setError] = useState("");
+  const { addToast } = useToast();
 
   const fetchProfile = async () => {
     try {
@@ -71,7 +73,7 @@ function EntrepreneurProfile() {
         setProfile(res.data);
     } catch (err) {
         console.error(err);
-        alert("Failed to load profile");
+        addToast("Failed to load profile", "error");
     }
   };
 
@@ -139,7 +141,7 @@ function EntrepreneurProfile() {
         experiences: prev.experiences.filter((e) => e.id !== id),
       }));
     } catch (err) {
-      alert(err.response?.data?.message || "Cannot delete skill");
+      addToast(err.response?.data?.message || "Cannot delete skill", "error");
     }
   };
 
@@ -154,7 +156,7 @@ function EntrepreneurProfile() {
         await API.delete("/user/profile");
         window.location.href = "/";
     } catch (err) {
-        alert(err.response?.data?.message || "Failed to delete account");
+        addToast(err.response?.data?.message || "Failed to delete account", "error");
     }
   };
 
