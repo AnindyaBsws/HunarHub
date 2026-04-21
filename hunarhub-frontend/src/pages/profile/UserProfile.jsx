@@ -3,14 +3,18 @@ import API from "../../api/axios";
 import { useAuth } from "../../context/AuthContext";
 import { useNavigate } from "react-router-dom";
 import { useToast } from "../../context/ToastContext";
+import ConfirmModal from "../../components/ConfirmModal"; // ✅ NEW
 
 function UserProfile() {
-  const { user, isSeller } = useAuth(); // ❌ removed logout
+  const { user, isSeller } = useAuth();
   const navigate = useNavigate();
 
   const [phone, setPhone] = useState("");
   const [editing, setEditing] = useState(false);
   const { addToast } = useToast();
+
+  // ✅ NEW: modal state
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
 
   const fetchProfile = async () => {
     try {
@@ -37,25 +41,21 @@ function UserProfile() {
       setEditing(false);
       addToast("Phone updated successfully", "success");
     } catch (err) {
-      addToast(err.response?.data?.message || "Update failed","error");
+      addToast(err.response?.data?.message || "Update failed", "error");
     }
   };
 
-  // 🔥 DELETE ACCOUNT
-  const handleDeleteAccount = async () => {
-    const confirmDelete = window.confirm(
-      "Are you sure you want to delete your account? This action cannot be undone."
-    );
-
-    if (!confirmDelete) return;
-
+  // 🔥 DELETE ACCOUNT (CONFIRMED)
+  const confirmDeleteAccount = async () => {
     try {
       await API.delete("/user/profile");
 
-      // ✅ force full reset (no logout call)
       window.location.href = "/";
     } catch (err) {
-      addToast(err.response?.data?.message || "Failed to delete account","error");
+      addToast(
+        err.response?.data?.message || "Failed to delete account",
+        "error"
+      );
     }
   };
 
@@ -118,13 +118,23 @@ function UserProfile() {
 
       <div className="mt-10">
         <button
-          onClick={handleDeleteAccount}
+          onClick={() => setShowDeleteModal(true)} // ✅ CHANGED
           className="w-full md:w-auto px-6 py-3 rounded-full font-semibold 
                      bg-red-100 text-red-600 hover:bg-red-200"
         >
           Delete Account
         </button>
       </div>
+
+      {/* 🔥 CONFIRM MODAL */}
+      <ConfirmModal
+        isOpen={showDeleteModal}
+        onClose={() => setShowDeleteModal(false)}
+        onConfirm={confirmDeleteAccount}
+        title="Delete Account"
+        description="This action cannot be undone. Your account will be permanently deleted."
+        confirmText="Delete"
+      />
 
     </div>
   );

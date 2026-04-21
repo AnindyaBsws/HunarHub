@@ -14,7 +14,7 @@ function Profile() {
 
   // ✅ redirect instead of dead UI
   if (!user) {
-    return <Navigate to="/login" replace />;
+    return <Navigate to="/" replace />;
   }
 
   return (

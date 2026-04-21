@@ -3,6 +3,7 @@ import API from "../../api/axios";
 import CategorySelect from "../../components/CategorySelect";
 import { motion, AnimatePresence } from "framer-motion";
 import { useToast } from "../../context/ToastContext";
+import ConfirmModal from "../../components/ConfirmModal"; // ✅ NEW
 
 function Editable({
   label,
@@ -53,7 +54,6 @@ function Editable({
 }
 
 function EntrepreneurProfile() {
-
   const [profile, setProfile] = useState(null);
   const [editingField, setEditingField] = useState(null);
   const [tempValue, setTempValue] = useState("");
@@ -63,23 +63,30 @@ function EntrepreneurProfile() {
   const [selectedCategory, setSelectedCategory] = useState(null);
   const [sector, setSector] = useState("");
   const [years, setYears] = useState("");
-  const [editingExpId, setEditingExpId] = useState(null);
+  const [editingExpId, setEditingExpId] = useState(null); // 🔥 used for edit mode
   const [error, setError] = useState("");
+
   const { addToast } = useToast();
+
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
 
   const fetchProfile = async () => {
     try {
-        const res = await API.get("/entrepreneur/profile");
-        setProfile(res.data);
+      const res = await API.get("/entrepreneur/profile");
+      setProfile(res.data);
     } catch (err) {
-        console.error(err);
-        addToast("Failed to load profile", "error");
+      console.error(err);
+      addToast("Failed to load profile", "error");
     }
   };
 
   const fetchCategories = async () => {
-    const res = await API.get("/categories");
-    setCategories(res.data || []);
+    try {
+      const res = await API.get("/categories");
+      setCategories(res.data || []);
+    } catch (err) {
+      addToast("Failed to load categories", "error");
+    }
   };
 
   useEffect(() => {
@@ -88,16 +95,29 @@ function EntrepreneurProfile() {
   }, []);
 
   const handleSave = async (field) => {
-    await API.patch("/entrepreneur/profile", { [field]: tempValue });
-    setProfile((prev) => ({ ...prev, [field]: tempValue }));
-    setEditingField(null);
+    try {
+      await API.patch("/entrepreneur/profile", { [field]: tempValue });
+
+      setProfile((prev) => ({ ...prev, [field]: tempValue }));
+      setEditingField(null);
+
+      addToast("Profile updated", "success");
+    } catch (err) {
+      addToast(err.response?.data?.message || "Update failed", "error");
+    }
   };
 
   const handleAdd = async () => {
     setError("");
 
-    if (!selectedCategory || !years) {
-      setError("Category and years are required");
+    // 🔥 FIX: validation for add & edit
+    if (!years) {
+      setError("Years is required");
+      return;
+    }
+
+    if (!editingExpId && !selectedCategory) {
+      setError("Category is required");
       return;
     }
 
@@ -106,33 +126,57 @@ function EntrepreneurProfile() {
       return;
     }
 
-    const exists = profile.experiences.find(
-      (e) => e.category?.id === selectedCategory.id
-    );
+    // 🔥 FIX: prevent duplicate only on add
+    if (!editingExpId) {
+      const exists = profile.experiences.find(
+        (e) => e.category?.id === selectedCategory.id
+      );
 
-    if (exists) {
-      setError("This skill already exists");
-      return;
+      if (exists) {
+        setError("This skill already exists");
+        return;
+      }
     }
 
     try {
-      await API.post("/entrepreneur/experience", {
-        categoryId: selectedCategory.id,
-        sector,
-        years,
-      });
+      if (editingExpId) {
+        // 🔥 FIX: UPDATE instead of ADD
+        await API.patch(`/entrepreneur/experience/${editingExpId}`, {
+          sector,
+          years,
+        });
 
+        addToast("Skill updated", "success");
+      } else {
+        await API.post("/entrepreneur/experience", {
+          categoryId: selectedCategory.id,
+          sector,
+          years,
+        });
+
+        addToast("Skill added successfully", "success");
+      }
+
+      // 🔥 RESET STATE
       setShowModal(false);
       setSector("");
       setYears("");
       setSelectedCategory(null);
+      setEditingExpId(null);
+
       fetchProfile();
     } catch (err) {
-      setError(err.response?.data?.message || "Failed to add skill");
+      setError(err.response?.data?.message || "Failed to save skill");
     }
   };
 
   const handleDelete = async (id) => {
+    // 🔥 FIX: prevent deleting last skill
+    if (profile.experiences.length <= 1) {
+      addToast("At least one skill is required", "error");
+      return;
+    }
+
     try {
       await API.delete(`/entrepreneur/experience/${id}`);
 
@@ -140,23 +184,22 @@ function EntrepreneurProfile() {
         ...prev,
         experiences: prev.experiences.filter((e) => e.id !== id),
       }));
+
+      addToast("Skill removed", "success");
     } catch (err) {
       addToast(err.response?.data?.message || "Cannot delete skill", "error");
     }
   };
 
-  const handleDeleteAccount = async () => {
-    const confirmDelete = window.confirm(
-        "Are you sure you want to delete your account? This action cannot be undone."
-    );
-
-    if (!confirmDelete) return;
-
+  const confirmDeleteAccount = async () => {
     try {
-        await API.delete("/user/profile");
-        window.location.href = "/";
+      await API.delete("/user/profile");
+      window.location.href = "/";
     } catch (err) {
-        addToast(err.response?.data?.message || "Failed to delete account", "error");
+      addToast(
+        err.response?.data?.message || "Failed to delete account",
+        "error"
+      );
     }
   };
 
@@ -164,7 +207,6 @@ function EntrepreneurProfile() {
 
   return (
     <div className="pt-24 px-4 md:px-10 max-w-4xl mx-auto">
-
       {/* HEADER */}
       <div className="flex gap-6 mb-10 items-center">
         <div className="w-20 h-20 rounded-full bg-gradient-to-br from-amber-200 to-yellow-300 flex items-center justify-center text-2xl font-bold shadow">
@@ -195,14 +237,17 @@ function EntrepreneurProfile() {
           handleSave={handleSave} />
       </div>
 
-      {/* 🔥 SKILLS (FIXED) */}
+      {/* SKILLS */}
       <div className="bg-white p-6 rounded-2xl shadow-sm border">
         <div className="flex justify-between mb-4">
           <h2 className="font-semibold text-lg">Skills</h2>
 
           <button
             disabled={profile.experiences.length >= 4}
-            onClick={() => setShowModal(true)}
+            onClick={() => {
+              setEditingExpId(null); // 🔥 FIX
+              setShowModal(true);
+            }}
             className={`px-4 py-2 rounded-lg text-sm transition ${
               profile.experiences.length >= 4
                 ? "bg-gray-300 text-gray-500 cursor-not-allowed"
@@ -242,6 +287,8 @@ function EntrepreneurProfile() {
                       setEditingExpId(exp.id);
                       setSector(exp.sector || "");
                       setYears(exp.years);
+                      setSelectedCategory(exp.category); // 🔥 FIX
+                      setShowModal(true); // 🔥 FIX
                     }}
                     className="text-gray-400 hover:text-gray-800 font-medium"
                   >
@@ -264,7 +311,7 @@ function EntrepreneurProfile() {
       {/* DELETE ACCOUNT */}
       <div className="mt-10">
         <button
-          onClick={handleDeleteAccount}
+          onClick={() => setShowDeleteModal(true)}
           className="w-full md:w-auto px-6 py-3 rounded-full font-semibold 
                      bg-red-100 text-red-600 hover:bg-red-200"
         >
@@ -272,25 +319,38 @@ function EntrepreneurProfile() {
         </button>
       </div>
 
+      <ConfirmModal
+        isOpen={showDeleteModal}
+        onClose={() => setShowDeleteModal(false)}
+        onConfirm={confirmDeleteAccount}
+        title="Delete Account"
+        description="This action cannot be undone. Your account will be permanently deleted."
+        confirmText="Delete"
+      />
+
       {/* MODAL */}
       {showModal && (
         <div className="fixed inset-0 bg-black/40 flex items-center justify-center">
           <div className="bg-white p-6 rounded-xl w-full max-w-md">
-            <CategorySelect
-              categories={categories}
-              selected={selectedCategory}
-              setSelected={setSelectedCategory}
-            />
+
+            {/* 🔥 FIX: disable category during edit */}
+            <div className={editingExpId ? "pointer-events-none opacity-60" : ""}>
+              <CategorySelect
+                categories={categories}
+                selected={selectedCategory}
+                setSelected={setSelectedCategory}
+              />
+            </div>
 
             <input
-              placeholder="Sector"
+              placeholder="Sector (optional)"
               value={sector}
               onChange={(e) => setSector(e.target.value)}
               className="w-full mt-3 px-3 py-2 border rounded-lg"
             />
 
             <input
-              placeholder="Years"
+              placeholder="Years (required)"
               value={years}
               onChange={(e) => setYears(e.target.value)}
               className="w-full mt-3 px-3 py-2 border rounded-lg"
@@ -308,7 +368,7 @@ function EntrepreneurProfile() {
                 onClick={handleAdd}
                 className="bg-black text-white px-4 py-2 rounded-lg"
               >
-                Add
+                {editingExpId ? "Update" : "Add"} {/* 🔥 FIX */}
               </button>
             </div>
           </div>

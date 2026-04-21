@@ -24,6 +24,7 @@ function Services() {
       setServices(res.data.services);
     } catch (err) {
       console.error(err);
+      addToast("Failed to load services", "error");
     }
   };
 
@@ -35,7 +36,7 @@ function Services() {
   const handleDelete = async (id) => {
     if (confirmId !== id) {
       setConfirmId(id);
-      addToast("Click again to confirm delete", "warning");
+      addToast("Click again to confirm delete", "info");
 
       setTimeout(() => {
         setConfirmId(null);
