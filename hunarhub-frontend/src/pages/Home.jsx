@@ -106,7 +106,7 @@ function Home() {
             rotateY,
             transformPerspective: 1000,
           }}
-          className="relative mt-20 md:mt-0 flex items-center justify-center"
+          className="relative mt-10 md:mt-0 flex items-center justify-center"
         >
 
           <motion.div
@@ -120,7 +120,7 @@ function Home() {
 
               <img
                 src={heroImage}
-                className="w-[340px] md:w-[520px] lg:w-[600px] object-contain"
+                className="w-[250px] sm:w-[320px] md:w-[520px] lg:w-[600px] object-contain"
               />
 
               {/* 🔥 GLASS REFLECTION GLOW */}

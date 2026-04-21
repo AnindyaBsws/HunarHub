@@ -59,21 +59,25 @@ function Explore() {
         </p>
 
         {/* 🔥 SEARCH BAR */}
-        <div className="flex flex-wrap gap-3 justify-center bg-white p-3 rounded-xl shadow-md max-w-4xl mx-auto">
+        <div className="flex flex-col md:flex-row gap-3 justify-center bg-white p-4 rounded-xl shadow-md max-w-4xl mx-auto">
 
-          <CategorySelect
+
+          <div className="w-full md:w-auto">
+            <CategorySelect
             categories={categories}
             selected={selectedCategory}
             setSelected={setSelectedCategory}
-          />
+            />
+
+          </div>
 
           <input
             placeholder="📍 Location"
             value={location}
             onChange={(e) => setLocation(e.target.value)}
             className="px-4 py-2 rounded-lg border border-gray-200 
-                       focus:outline-none focus:ring-2 focus:ring-amber-300 
-                       bg-white w-[180px]"
+            focus:outline-none focus:ring-2 focus:ring-amber-300 
+            bg-white w-full md:w-[180px]"
           />
 
           <select
@@ -81,7 +85,7 @@ function Explore() {
             onChange={(e) => setSort(e.target.value)}
             className="px-4 py-2 rounded-lg border border-gray-200 
                        focus:outline-none focus:ring-2 focus:ring-amber-300 
-                       bg-white"
+                       bg-white w-full md:w-auto"
           >
             <option value="">Sort</option>
             <option value="newest">Newest</option>
@@ -92,7 +96,7 @@ function Explore() {
             onClick={fetchEntrepreneurs}
             disabled={loading}
             className="bg-amber-400 text-black px-6 py-2 rounded-lg font-semibold
-                       hover:bg-amber-300 active:scale-95 transition"
+                       hover:bg-amber-300 active:scale-95 transition w-full md:w-auto"
           >
             {loading ? "Searching..." : "Search"}
           </button>
@@ -100,7 +104,7 @@ function Explore() {
       </div>
 
       {/* 🔥 CATEGORY CHIPS */}
-      <div className="px-6 md:px-10 mt-8 flex gap-3 overflow-x-auto no-scrollbar">
+      <div className="px-6 md:px-10 mt-8 flex gap-3 overflow-x-auto whitespace-nowrap">
 
         <button
           onClick={() => setSelectedCategory(null)}

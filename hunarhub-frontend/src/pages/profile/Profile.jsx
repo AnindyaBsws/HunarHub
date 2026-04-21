@@ -18,7 +18,7 @@ function Profile() {
   }
 
   return (
-    <div className="min-h-screen bg-[#f9fafb] text-black">
+    <div className="min-h-screen bg-[#f9fafb] text-black pt-28">
       <Navbar />
 
       {isSeller ? <EntrepreneurProfile /> : <UserProfile />}
