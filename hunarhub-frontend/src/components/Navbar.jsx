@@ -88,7 +88,7 @@ function Navbar() {
       </motion.h1>
 
       {/* 🔥 CENTER NAV (FLOATING PILL) */}
-      <div className="absolute left-1/2 transform -translate-x-1/2 hidden md:block">
+      <div className="absolute left-1/2 transform -translate-x-1/2 block md:block overflow-x-auto max-w-[70%]">
 
         <div className="relative px-4 py-1.5 rounded-full border border-gray-200 shadow-xl overflow-hidden">
 
@@ -100,7 +100,7 @@ function Navbar() {
             className="absolute inset-0 pointer-events-none opacity-60"
           />
 
-          <div className="relative flex gap-4 text-[13px] text-gray-600 backdrop-blur-md bg-white/70 rounded-full px-6 py-2">
+          <div className="relative flex gap-3 text-[12px] overflow-x-auto whitespace-nowrap text-gray-600 backdrop-blur-md bg-white/70 rounded-full px-6 py-2">
 
             {navItems.map((item, i) => {
               const isActive = location.pathname === item.path;
