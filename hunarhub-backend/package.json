@@ -5,6 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "nodemon start.js",
+    "start": "node start.js", 
     "test": "node --experimental-vm-modules node_modules/jest/bin/jest.js --runInBand",
     "test:db:reset": "dotenv -e .env.test -- prisma migrate reset --force",
     "test:run": "dotenv -e .env.test -- node --experimental-vm-modules node_modules/jest/bin/jest.js --runInBand",
