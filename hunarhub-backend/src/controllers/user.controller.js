@@ -55,7 +55,6 @@ async function refreshTokenController(req, res) {
 
         const decoded = verifyToken(refreshToken, process.env.REFRESH_SECRET);
 
-        // ✅ IMPORTANT FIX HERE
         const user = await prisma.user.findUnique({
             where: { id: decoded.id },
             include: {
@@ -176,19 +175,19 @@ async function loginUser(req, res) {
             }
         });
 
+        // 🔥 FIX: Production-ready cookies
         res
             .cookie("accessToken", accessToken, {
                 httpOnly: true,
-                secure: false,
-                sameSite: "lax"
+                secure: true,           // ✅ CHANGED
+                sameSite: "none"        // ✅ CHANGED
             })
             .cookie("refreshToken", refreshToken, {
                 httpOnly: true,
-                secure: false,
-                sameSite: "lax"
+                secure: true,           // ✅ CHANGED
+                sameSite: "none"        // ✅ CHANGED
             });
 
-        // ✅ IMPORTANT FIX HERE
         return res.status(200).json({
             message: 'Login Successful.',
             user: {
@@ -237,8 +236,18 @@ async function logoutUser(req, res) {
             });
         }
 
-        res.clearCookie("accessToken");
-        res.clearCookie("refreshToken");
+        // 🔥 FIX: must match cookie config
+        res.clearCookie("accessToken", {
+            httpOnly: true,
+            secure: true,
+            sameSite: "none"
+        });
+
+        res.clearCookie("refreshToken", {
+            httpOnly: true,
+            secure: true,
+            sameSite: "none"
+        });
 
         return res.status(200).json({
             message: 'Logout successful'
