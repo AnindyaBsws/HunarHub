@@ -1,34 +1,97 @@
-UNDER CONSTRUCTION!!
+# 🚀 HunarHub
 
+A full-stack platform to connect local professionals with clients — enabling users to hire skilled experts or get hired based on their skills.
 
-# HunarHub
-<!-- Development/Production (Primary DB) -->
-node server.js
+🌐 Live Demo: https://hunar-hub-weld.vercel.app/
 
-<!-- Testing(Test DB) -->
-#1.Reset DB
-npx dotenv -e .env.test -- npx prisma migrate reset --force
-#2.Start Server
-npx dotenv -e .env.test -- node server.js
-(Run tests / Postman)
-#3. Open the Test DB
-npx dotenv -e .env.test -- npx prisma studio
-#4.To run the test files
-npx dotenv -e .env.test -- npm test
+---
 
+## 📌 Features
 
+- 🔍 Discover local professionals by category  
+- 🧑‍💼 Create and manage entrepreneur profiles  
+- 💼 Offer services and receive requests  
+- ⭐ Review and rating system  
+- 🔐 Secure authentication with JWT  
+- 📊 Structured backend with relational database  
 
-<!-- Customized Scripts to run the app -->
+---
 
-1. Run dev server (Primary DB, Runs tests using .env)  : npm run dev
+## 🛠️ Tech Stack
 
-2. Reset test DB only                                  : npm run test:db:reset
-3. Run tests (test DB, Runs tests using .env.test)     : npm run test:run
-4. Does Everything for Tests(Reset DB Run all tests.   : npm run test:full
-Sequential execution)
-5. Open Test Db GUI                                    : npm run test:studio
+### Frontend
+- React (Vite)
+- Tailwind CSS
 
+### Backend
+- Node.js
+- Express.js
 
-<!-- ... -->
+### Database
+- PostgreSQL (Supabase)
 
-UNDER CONSTRUCTION!!
+### ORM
+- Prisma
+
+### Deployment
+- Frontend: Vercel  
+- Backend: Render  
+
+---
+
+## ⚙️ System Architecture
+
+text Frontend (Vercel)         ↓ Backend API (Render)         ↓ PostgreSQL (Supabase) 
+
+---
+
+## 🚀 Getting Started
+
+### 1. Clone the repository
+
+bash git clone https://github.com/AnindyaBsws/HunarHub.git cd HunarHub 
+
+---
+
+### 2. Backend setup
+
+bash cd hunarhub-backend npm install 
+
+Create .env file:
+
+env DATABASE_URL=your_database_url JWT_SECRET=your_secret REFRESH_SECRET=your_secret CLIENT_URL=http://localhost:5173 
+
+Run migrations:
+
+bash npx prisma db push npx prisma generate 
+
+Start server:
+
+bash npm run dev 
+
+---
+
+### 3. Frontend setup
+
+bash cd hunarhub-frontend npm install npm run dev 
+
+---
+
+## 🌱 Database Seeding
+
+bash npx prisma db seed 
+
+---
+
+## 📄 License
+
+This project is licensed under the MIT License.
+
+---
+
+## 👤 Author
+
+Anindya Biswas
+
+- LinkedIn: https://linkedin.com/in/anindya-biswas-472897219/
+- GitHub: https://github.com/AnindyaB
