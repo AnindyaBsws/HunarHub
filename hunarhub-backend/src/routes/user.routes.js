@@ -16,6 +16,11 @@ const router = express.Router();
 //Create test route
 router.get('/test-user', testUser);
 
+// for UptimeRobot(5 mins is already set up in the UptimeRobot url)
+router.get('/ping', (req, res) => {
+  res.status(200).json({ message: "Server alive 🚀" });
+});
+
 //DB check routes
 router.post('/refresh', refreshTokenController);
 
