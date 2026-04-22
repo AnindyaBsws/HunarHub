@@ -15,7 +15,7 @@ function Navbar() {
     clearIncoming,
   } = useNotifications();
 
-  // 🔥 cursor tracking for glow
+  //cursor tracking for glow
   const mouseX = useMotionValue(0);
   const mouseY = useMotionValue(0);
 

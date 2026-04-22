@@ -47,6 +47,11 @@ function Home() {
 
       <Navbar />
 
+      {/* 🔥 MOBILE NOTICE */}
+      <div className="block md:hidden text-center bg-yellow-100 text-yellow-800 text-sm py-2 px-4">
+        For best experience, switch to Desktop mode 📱➡️💻
+      </div>
+
       <div className="flex flex-col md:flex-row items-center justify-between 
                       min-h-screen px-6 md:px-16 pt-28 md:pt-32">
 
@@ -167,6 +172,45 @@ function Home() {
         </motion.div>
 
       </div>
+
+      {/* 🔥 FOOTER */}
+      <footer className="bg-black text-gray-300 px-6 md:px-16 py-12">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+
+          {/* BRAND */}
+          <div>
+            <h2 className="text-white text-xl font-semibold mb-2">
+              HunarHub
+            </h2>
+            <p className="text-sm text-gray-400">
+              Connecting local talent with real opportunities.
+            </p>
+          </div>
+
+          {/* LINKS */}
+          <div>
+            <h3 className="text-white font-medium mb-3">Quick Links</h3>
+            <ul className="space-y-2 text-sm">
+              <li className="hover:text-white cursor-pointer">Explore</li>
+              <li className="hover:text-white cursor-pointer">About</li>
+              <li className="hover:text-white cursor-pointer">Become Seller</li>
+            </ul>
+          </div>
+
+          {/* CONTACT */}
+          <div>
+            <h3 className="text-white font-medium mb-3">Contact</h3>
+            <p className="text-sm text-gray-400">
+              Email: support@hunarhub.com
+            </p>
+          </div>
+
+        </div>
+
+        <div className="mt-10 border-t border-gray-800 pt-6 text-center text-sm text-gray-500">
+          © 2026 HunarHub. All rights reserved.
+        </div>
+      </footer>
 
     </div>
   );
