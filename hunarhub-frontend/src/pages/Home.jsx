@@ -1,5 +1,5 @@
 import Navbar from "../components/Navbar";
-import { FaGithub, FaLinkedin } from "react-icons/fa";
+import { FaGithub, FaLinkedin, FaEnvelope } from "react-icons/fa";
 import { motion, useMotionValue, useTransform, useSpring } from "framer-motion";
 import { useAuth } from "../context/AuthContext";
 import { useNavigate } from "react-router-dom";
@@ -200,14 +200,26 @@ function Home() {
           <div>
             <h3 className="text-white font-medium mb-3">Connect</h3>
 
-            <div className="flex gap-4 mt-2">
+            {/* EMAIL (visible text + icon) */}
+            <div className="flex items-center gap-2 text-sm text-gray-400 mb-4">
+              <FaEnvelope className="text-lg" />
+              <a
+                href="mailto:biswas.anindya.dev@gmail.com"
+                className="hover:text-white transition"
+              >
+                biswas.anindya.dev@gmail.com
+              </a>
+            </div>
+
+            {/* SOCIAL ICONS */}
+            <div className="flex gap-4">
 
               {/* LinkedIn */}
               <a
                 href="https://www.linkedin.com/in/anindya-biswas-472897219/"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="text-gray-400 hover:text-white transition text-xl"
+                className="text-gray-400 hover:text-white transition text-xl hover:scale-110"
               >
                 <FaLinkedin />
               </a>
@@ -217,7 +229,7 @@ function Home() {
                 href="https://github.com/AnindyaBsws"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="text-gray-400 hover:text-white transition text-xl"
+                className="text-gray-400 hover:text-white transition text-xl hover:scale-110"
               >
                 <FaGithub />
               </a>
