@@ -182,7 +182,7 @@ function Home() {
           <div>
             <h2 className="text-white text-xl font-semibold mb-2">HunarHub</h2>
             <p className="text-sm text-gray-400">
-              Connecting local talent with real opportunities.
+              HunarHub bridges this gap by providing a platform where users can explore verified professionals, send service requests, and connect directly. Sellers can showcase their skills, services, and experience to reach more clients.
             </p>
           </div>
 
