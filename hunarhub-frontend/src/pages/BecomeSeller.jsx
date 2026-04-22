@@ -4,12 +4,12 @@ import API from "../api/axios";
 import Navbar from "../components/Navbar";
 import CategorySelect from "../components/CategorySelect";
 import { useAuth } from "../context/AuthContext";
-import { useToast } from "../context/ToastContext"; 
+import { useToast } from "../context/ToastContext";
 import { motion } from "framer-motion";
 
 function BecomeSeller() {
-  const { user, isSeller } = useAuth();
-  const { addToast } = useToast(); 
+  const { user, isSeller, checkSellerStatus } = useAuth(); // ✅ FIXED
+  const { addToast } = useToast();
   const navigate = useNavigate();
 
   const [categories, setCategories] = useState([]);
@@ -55,15 +55,17 @@ function BecomeSeller() {
     e.preventDefault();
 
     if (!form.location || !form.phone || !selectedCategory) {
-      addToast("Please fill all required fields", "error"); 
+      addToast("Please fill all required fields", "error");
       return;
     }
 
     try {
+      // ✅ update phone
       await API.patch("/user/profile", {
         phone: form.phone,
       });
 
+      // ✅ create seller profile
       await API.post("/entrepreneur/profile", {
         bio: form.bio,
         location: form.location,
@@ -80,19 +82,25 @@ function BecomeSeller() {
         ],
       });
 
-      window.location.href = "/profile";
+      // 🔥 CRITICAL FIX → update frontend state
+      await checkSellerStatus();
+
+      // ✅ clean navigation (NO reload)
+      navigate("/profile");
 
     } catch (err) {
       console.error(err);
 
       const msg = err.response?.data?.message;
 
+      // 🔥 FIXED (no window.location)
       if (msg === "Profile already exists") {
-        window.location.href = "/profile";
+        await checkSellerStatus();
+        navigate("/profile");
         return;
       }
 
-      addToast(msg || "Error creating profile", "error"); 
+      addToast(msg || "Error creating profile", "error");
     }
   };
 
@@ -107,7 +115,7 @@ function BecomeSeller() {
           className="w-full max-w-2xl bg-white rounded-2xl shadow-sm border p-6 md:p-10"
         >
           <h2 className="text-2xl font-bold mb-2">
-            Become a Seller 
+            Become a Seller 🚀
           </h2>
 
           <form onSubmit={handleSubmit} className="flex flex-col gap-6">

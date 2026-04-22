@@ -96,6 +96,7 @@ export function AuthProvider({ children }) {
         logout,
         loading,
         isSeller,
+        checkSellerStatus,
       }}
     >
       {children}
