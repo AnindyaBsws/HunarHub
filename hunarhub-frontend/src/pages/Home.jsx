@@ -1,4 +1,5 @@
 import Navbar from "../components/Navbar";
+import { FaGithub, FaLinkedin } from "react-icons/fa";
 import { motion, useMotionValue, useTransform, useSpring } from "framer-motion";
 import { useAuth } from "../context/AuthContext";
 import { useNavigate } from "react-router-dom";
