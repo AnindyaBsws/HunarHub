@@ -17,7 +17,7 @@ COPY . .
 RUN npx prisma generate
 
 # Expose port
-EXPOSE 8000
+EXPOSE 10000
 
 # Start app
-CMD ["sh", "-c", "npx prisma migrate deploy && node start.js"]
+CMD ["sh", "-c", "npx prisma migrate deploy || true; node start.js"]
