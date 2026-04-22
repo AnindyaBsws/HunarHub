@@ -179,9 +179,7 @@ function Home() {
 
           {/* BRAND */}
           <div>
-            <h2 className="text-white text-xl font-semibold mb-2">
-              HunarHub
-            </h2>
+            <h2 className="text-white text-xl font-semibold mb-2">HunarHub</h2>
             <p className="text-sm text-gray-400">
               Connecting local talent with real opportunities.
             </p>
@@ -191,18 +189,39 @@ function Home() {
           <div>
             <h3 className="text-white font-medium mb-3">Quick Links</h3>
             <ul className="space-y-2 text-sm">
-              <li className="hover:text-white cursor-pointer">Explore</li>
-              <li className="hover:text-white cursor-pointer">About</li>
-              <li className="hover:text-white cursor-pointer">Become Seller</li>
+              <li onClick={() => navigate("/explore")} className="hover:text-white cursor-pointer">Explore</li>
+              <li onClick={() => navigate("/about")} className="hover:text-white cursor-pointer">About</li>
+              <li onClick={() => navigate("/become-seller")} className="hover:text-white cursor-pointer">Become Seller</li>
             </ul>
           </div>
 
-          {/* CONTACT */}
+          {/* CONTACT + SOCIAL */}
           <div>
-            <h3 className="text-white font-medium mb-3">Contact</h3>
-            <p className="text-sm text-gray-400">
-              Email: support@hunarhub.com
-            </p>
+            <h3 className="text-white font-medium mb-3">Connect</h3>
+
+            <div className="flex gap-4 mt-2">
+
+              {/* LinkedIn */}
+              <a
+                href="https://www.linkedin.com/in/anindya-biswas-472897219/"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-gray-400 hover:text-white transition text-xl"
+              >
+                <FaLinkedin />
+              </a>
+
+              {/* GitHub */}
+              <a
+                href="https://github.com/AnindyaBsws"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-gray-400 hover:text-white transition text-xl"
+              >
+                <FaGithub />
+              </a>
+
+            </div>
           </div>
 
         </div>

@@ -8,7 +8,7 @@ export function AuthProvider({ children }) {
   const [isSeller, setIsSeller] = useState(false);
   const [loading, setLoading] = useState(true);
 
-  // 🔥 SAFE SELLER CHECK (NO CONSOLE ERROR)
+  // SAFE SELLER CHECK (NO CONSOLE ERROR)
   const checkSellerStatus = async () => {
     try {
       const res = await API.get("/entrepreneur/profile").catch(() => null);
