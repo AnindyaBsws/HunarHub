@@ -25,7 +25,7 @@ export function AuthProvider({ children }) {
     }
   };
 
-  // ✅ INITIAL LOAD
+  // INITIAL LOAD
   useEffect(() => {
     const init = async () => {
       const hasLoggedIn = localStorage.getItem("hasLoggedIn");
@@ -56,25 +56,25 @@ export function AuthProvider({ children }) {
     init();
   }, []);
 
-  // ✅ LOGIN
+  // LOGIN
   const login = async (data) => {
     const res = await API.post("/users/login", data);
     const userData = res.data.user;
 
     setUser(userData);
 
-    // 🔥 CHECK SELLER AFTER LOGIN
+    // CHECK SELLER AFTER LOGIN
     await checkSellerStatus();
 
     localStorage.setItem("hasLoggedIn", "true");
   };
 
-  // ✅ REGISTER
+  // REGISTER
   const register = async (data) => {
     await API.post("/users/register", data);
   };
 
-  // ✅ LOGOUT
+  // LOGOUT
   const logout = async () => {
     try {
       await API.post("/users/logout");
