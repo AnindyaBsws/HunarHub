@@ -76,7 +76,7 @@ function Explore() {
             value={location}
             onChange={(e) => setLocation(e.target.value)}
             className="px-4 py-2 rounded-lg border border-gray-200 
-            focus:outline-none focus:ring-2 focus:ring-amber-300 
+            focus:outline-none focus:ring-2 focus:ring-gray-500
             bg-white w-full md:w-[180px]"
           />
 

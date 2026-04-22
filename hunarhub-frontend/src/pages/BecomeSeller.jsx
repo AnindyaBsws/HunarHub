@@ -4,12 +4,12 @@ import API from "../api/axios";
 import Navbar from "../components/Navbar";
 import CategorySelect from "../components/CategorySelect";
 import { useAuth } from "../context/AuthContext";
-import { useToast } from "../context/ToastContext"; // ✅ NEW
+import { useToast } from "../context/ToastContext"; 
 import { motion } from "framer-motion";
 
 function BecomeSeller() {
   const { user, isSeller } = useAuth();
-  const { addToast } = useToast(); // ✅ NEW
+  const { addToast } = useToast(); 
   const navigate = useNavigate();
 
   const [categories, setCategories] = useState([]);
@@ -55,7 +55,7 @@ function BecomeSeller() {
     e.preventDefault();
 
     if (!form.location || !form.phone || !selectedCategory) {
-      addToast("Please fill all required fields", "error"); // ✅ FIX
+      addToast("Please fill all required fields", "error"); 
       return;
     }
 
@@ -92,7 +92,7 @@ function BecomeSeller() {
         return;
       }
 
-      addToast(msg || "Error creating profile", "error"); // ✅ FIX
+      addToast(msg || "Error creating profile", "error"); 
     }
   };
 
@@ -107,7 +107,7 @@ function BecomeSeller() {
           className="w-full max-w-2xl bg-white rounded-2xl shadow-sm border p-6 md:p-10"
         >
           <h2 className="text-2xl font-bold mb-2">
-            Become a Seller 🚀
+            Become a Seller 
           </h2>
 
           <form onSubmit={handleSubmit} className="flex flex-col gap-6">
